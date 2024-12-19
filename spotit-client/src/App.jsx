@@ -18,7 +18,7 @@ function App() {
     { bottom: '25%', left: '15%' },
     { top: '25%', left: '15%' },
     { top: '55%', left: '40%', transform: 'translate(-50%, -50%)' },
-    { top: '45%', left: '60%', transform: 'translate(-50%, -50%)' },
+    { top: '50%', left: '65%', transform: 'translate(-50%, -50%)' },
   ];
 
   const getSymbolPath = (symbol) => {
@@ -38,20 +38,29 @@ function App() {
   };
 
   return (
-    <div className="h-screen w-full flex flex-col">
+    <div className="h-screen max-h-screen w-full flex flex-col">
       <div className="h-1/2 flex items-center justify-center">
         <div className="relative h-[80%] sm:h-[90%] aspect-square rounded-full shadow-md backdrop-blur-3xl border border-neutral-200">
           {topCard.map((symbol, index) => {
-            const rotation = Math.floor(Math.random() * 360);
+            const rotation = Math.floor(Math.random() * 180);
             const position = positions[index];
             return (
-              <img
+              <div
                 key={index}
-                src={getSymbolPath(symbol)}
-                alt={symbol}
-                className="w-10 h-10 absolute"
-                style={{ ...position }}
-              />
+                className="absolute"
+                style={{
+                  ...position,
+                  transform: `${
+                    position.transform || ''
+                  } rotate(${rotation}deg)`,
+                }}
+              >
+                <img
+                  src={getSymbolPath(symbol)}
+                  alt={symbol}
+                  className="w-10 h-10"
+                />
+              </div>
             );
           })}
         </div>
@@ -61,21 +70,27 @@ function App() {
         <div className="relative h-1/2 flex items-center justify-center">
           <div className="h-[80%] sm:h-[90%] aspect-square rounded-full shadow-lg backdrop-blur-3xl border border-neutral-200 ">
             {shuffle([...remainingCards[0]]).map((symbol, index) => {
-              const rotation = Math.floor(Math.random() * 360);
+              const rotation = Math.floor(Math.random() * -90);
               const position = positions[index];
               return (
-                <button
+                <div
                   key={index}
                   className="absolute"
-                  onClick={() => handleMatch(symbol)}
-                  style={{ ...position }}
+                  style={{
+                    ...position,
+                    transform: `${
+                      position.transform || ''
+                    } rotate(${rotation}deg)`,
+                  }}
                 >
-                  <img
-                    src={getSymbolPath(symbol)}
-                    alt={symbol}
-                    className="w-10 h-10"
-                  />
-                </button>
+                  <button onClick={() => handleMatch(symbol)}>
+                    <img
+                      src={getSymbolPath(symbol)}
+                      alt={symbol}
+                      className="w-10 h-10"
+                    />
+                  </button>
+                </div>
               );
             })}
           </div>
