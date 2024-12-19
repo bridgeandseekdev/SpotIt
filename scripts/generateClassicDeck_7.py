@@ -16,7 +16,7 @@ def load_symbols(symbols_file):
 def generate_spotit_cards(symbols):
     """Generate Spot It! cards based on projective plane design."""
     # Generate the projective plane design
-    # symbols per card
+    # symbols per card 8
     sol = designs.projective_plane(7)
     
     # Generate cards using the symbols and incidence matrix
