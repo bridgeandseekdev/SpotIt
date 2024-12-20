@@ -12,7 +12,7 @@ dist
 dist-ssr
 *.local
 
-spotit-client/src/assets/symbols/**/*
+spotit-client/src/assets/symbols/
 
 # Editor directories and files
 .vscode/*
