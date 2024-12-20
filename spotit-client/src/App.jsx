@@ -103,14 +103,14 @@ function App() {
     useGameState(deck);
 
   return (
-    <div className="h-screen max-h-screen flex flex-col">
-      <div className="flex flex-grow flex-col">
-        <div className="h-1/2 flex items-center justify-center">
+    <div className="flex flex-col" style={{ height: '100dvh' }}>
+      <div className="flex-1 flex flex-col">
+        <div className="flex-1 max-h-full flex items-center justify-center">
           <GameCard symbols={topCard} />
         </div>
 
         {remainingCards.length > 0 && (
-          <div className="relative h-1/2 flex items-center justify-center">
+          <div className="flex-1 max-h-full flex items-center justify-center">
             <GameCard
               symbols={shuffle([...remainingCards[0]])}
               isInteractive
@@ -120,7 +120,7 @@ function App() {
         )}
       </div>
 
-      <div className="text-center p-4">
+      <div className="flex-none text-center pb-4">
         <h2 className="text-lg font-semibold">
           Cards Remaining: {cardsRemaining}
         </h2>
