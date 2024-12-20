@@ -1,6 +1,6 @@
-/* eslint-disable no-unused-vars */
 import { useState } from 'react';
-import deck from '../public/decks/classic_deck.json';
+import deck from '/src/assets/decks/classic_deck_7.json';
+import { ICON_MAP } from './assets/icons';
 import shuffle from 'lodash.shuffle';
 
 function App() {
@@ -21,10 +21,16 @@ function App() {
     { top: '50%', left: '65%', transform: 'translate(-50%, -50%)' },
   ];
 
-  const getSymbolPath = (symbol) => {
-    const color = symbol.split('_')[0];
-    return `/public/symbols/${color}/${symbol}.svg`;
-  };
+  function renderSymbol(symbol) {
+    const IconComponent = ICON_MAP[symbol];
+
+    if (!IconComponent) {
+      console.warn(`No icon found for symbol: ${symbol}`);
+      return null;
+    }
+
+    return IconComponent;
+  }
 
   const handleMatch = (symbol) => {
     if (remainingCards.length === 0) return;
@@ -44,10 +50,12 @@ function App() {
           {topCard.map((symbol, index) => {
             const rotation = Math.floor(Math.random() * 180);
             const position = positions[index];
+            const IconComponent = renderSymbol(symbol);
+
             return (
               <div
                 key={index}
-                className="absolute"
+                className="absolute w-10 h-10 md:w-16 md:h-16"
                 style={{
                   ...position,
                   transform: `${
@@ -55,11 +63,12 @@ function App() {
                   } rotate(${rotation}deg)`,
                 }}
               >
-                <img
-                  src={getSymbolPath(symbol)}
-                  alt={symbol}
-                  className="w-10 h-10"
-                />
+                {IconComponent && (
+                  <IconComponent
+                    className="w-full h-full"
+                    aria-label={symbol}
+                  />
+                )}
               </div>
             );
           })}
@@ -72,6 +81,8 @@ function App() {
             {shuffle([...remainingCards[0]]).map((symbol, index) => {
               const rotation = Math.floor(Math.random() * -90);
               const position = positions[index];
+              const IconComponent = renderSymbol(symbol);
+
               return (
                 <div
                   key={index}
@@ -83,12 +94,16 @@ function App() {
                     } rotate(${rotation}deg)`,
                   }}
                 >
-                  <button onClick={() => handleMatch(symbol)}>
-                    <img
-                      src={getSymbolPath(symbol)}
-                      alt={symbol}
-                      className="w-10 h-10"
-                    />
+                  <button
+                    onClick={() => handleMatch(symbol)}
+                    className="w-10 h-10 md:w-16 md:h-16"
+                  >
+                    {IconComponent && (
+                      <IconComponent
+                        className="w-full h-full"
+                        aria-label={symbol}
+                      />
+                    )}
                   </button>
                 </div>
               );

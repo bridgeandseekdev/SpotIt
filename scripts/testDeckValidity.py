@@ -4,7 +4,7 @@ from itertools import combinations
 
 # Paths to relevant directories
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-DECK_FILE = os.path.join(BASE_DIR, "spotIt-client", "public", "decks", "classic_deck.json")
+DECK_FILE = os.path.join(BASE_DIR, "spotit-client", "src", "assets", "decks", "classic_deck_7.json")
 
 def load_deck(deck_file):
     """Load the deck from the JSON file."""

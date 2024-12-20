@@ -1,4 +1,4 @@
-# If the input file is a json array
+# If the input file is a color coordinated json object
 
 from sage.all import *
 import json
@@ -10,10 +10,16 @@ CLASSIC_SYMBOLS_FILE = os.path.join(BASE_DIR, "spotit-client", "src", "assets", 
 DECKS_DIR = os.path.join(BASE_DIR, "spotit-client", "src", "assets", "decks")
 
 def load_symbols(symbols_file):
-    """Load symbols from classic.json."""
+    """Load symbols from classic.json and extract unique capitalized symbols."""
     with open(symbols_file, "r", encoding="utf-8") as f:
-        symbols = json.load(f)
-    return sorted(symbols, key=str.lower)
+        symbols_by_color = json.load(f)
+    
+    # Extract all unique symbols and capitalize them
+    all_symbols = set()
+    for symbols in symbols_by_color.values():
+        all_symbols.update(symbol for symbol in symbols)
+    
+    return sorted(list(all_symbols))
 
 def generate_spotit_cards(symbols):
     """Generate Spot It! cards based on projective plane design."""

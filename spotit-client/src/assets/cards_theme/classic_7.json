@@ -1,0 +1,75 @@
+{
+  "black": [
+    "BombIcon",
+    "ElephantIcon",
+    "HorseIcon",
+    "LockIcon",
+    "SkullIcon",
+    "SpiderIcon",
+    "SunglassesIcon",
+    "YinYangIcon"
+  ],
+  "combo": [
+    "BabyBottleIcon",
+    "CarrotIcon",
+    "ClownIcon",
+    "EyeIcon",
+    "FlowerIcon",
+    "TreeIcon",
+    "WatchIcon",
+    "ZebraIcon"
+  ],
+  "green": [
+    "AppleIcon",
+    "CactusIcon",
+    "CloverIcon",
+    "DinosaurIcon",
+    "SplashIcon",
+    "TurtleIcon"
+  ],
+  "lightBlue": [
+    "DolphinIcon",
+    "IceCubeIcon",
+    "IglooIcon",
+    "PencilIcon",
+    "PenguinIcon",
+    "SnowflakeIcon",
+    "SnowmanIcon"
+  ],
+  "orange": [
+    "AnchorIcon",
+    "CarIcon",
+    "ClefIcon",
+    "KeyIcon",
+    "ManIcon",
+    "QuestionMarkIcon"
+  ],
+  "purple": [
+    "CandleIcon",
+    "CatIcon",
+    "DragonIcon",
+    "GuitarIcon",
+    "MoonIcon",
+    "ScissorsIcon",
+    "SpiderWebIcon"
+  ],
+  "red": [
+    "BalloonIcon",
+    "BonfireIcon",
+    "HeartIcon",
+    "LadybugIcon",
+    "LipsIcon",
+    "MapleIcon",
+    "StopIcon",
+    "TargetIcon"
+  ],
+  "yellow": [
+    "BoltIcon",
+    "BulbIcon",
+    "CheeseIcon",
+    "ExclamationIcon",
+    "PalmIcon",
+    "StarIcon",
+    "SunIcon"
+  ]
+}
