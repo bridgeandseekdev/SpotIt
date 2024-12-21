@@ -6,7 +6,7 @@ export default {
       colors: {
         //Background colors
         bg: {
-          primary: '#FFFFFF',
+          primary: '#E2E4E9',
           secondary: '#F8F9FA',
           tertiary: '#F3F4F6',
           'dark-primary': '#242F41',
