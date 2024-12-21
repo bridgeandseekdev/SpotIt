@@ -2,6 +2,7 @@
 import { useState, useCallback } from 'react';
 import deck from '/src/assets/decks/classic_deck_7.json';
 import { ICON_MAP } from './assets/icons';
+import { useTheme } from './context/ThemeContext';
 import shuffle from 'lodash.shuffle';
 
 // Positions for 8 symbols in a circular pattern
@@ -102,8 +103,21 @@ function App() {
   const { topCard, remainingCards, cardsRemaining, handleMatch } =
     useGameState(deck);
 
+  const { isDark, toggleTheme } = useTheme();
+
   return (
-    <div className="flex flex-col" style={{ height: '100dvh' }}>
+    <div
+      className="relative flex flex-col dark:bg-[#192331] dark:text-[#f1f3f7]"
+      style={{ height: '100dvh' }}
+    >
+      <div className="absolute top-4 right-6">
+        <button
+          onClick={toggleTheme}
+          aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+        >
+          {isDark ? 'Light' : 'Dark'}
+        </button>
+      </div>
       <div className="flex-1 flex flex-col">
         <div className="flex-1 max-h-full flex items-center justify-center">
           <GameCard symbols={topCard} />
