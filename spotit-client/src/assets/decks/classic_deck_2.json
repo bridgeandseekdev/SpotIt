@@ -1,0 +1,37 @@
+[
+    [
+        "HeartIcon",
+        "SunIcon",
+        "TargetIcon"
+    ],
+    [
+        "HeartIcon",
+        "LipsIcon",
+        "TurtleIcon"
+    ],
+    [
+        "BulbIcon",
+        "SunIcon",
+        "TurtleIcon"
+    ],
+    [
+        "BulbIcon",
+        "LipsIcon",
+        "TargetIcon"
+    ],
+    [
+        "AppleIcon",
+        "TargetIcon",
+        "TurtleIcon"
+    ],
+    [
+        "AppleIcon",
+        "LipsIcon",
+        "SunIcon"
+    ],
+    [
+        "AppleIcon",
+        "BulbIcon",
+        "HeartIcon"
+    ]
+]

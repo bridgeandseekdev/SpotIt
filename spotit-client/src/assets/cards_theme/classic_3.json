@@ -1,0 +1,6 @@
+{
+  "green": ["AppleIcon", "CactusIcon", "TurtleIcon"],
+  "orange": ["AnchorIcon", "ManIcon", "QuestionMarkIcon"],
+  "purple": ["CandleIcon", "ScissorsIcon", "SpiderWebIcon"],
+  "red": ["HeartIcon", "LadybugIcon", "LipsIcon", "TargetIcon"]
+}

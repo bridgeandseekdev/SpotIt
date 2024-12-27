@@ -1,0 +1,8 @@
+{
+  "green": ["AppleIcon", "CactusIcon", "SplashIcon", "TurtleIcon"],
+  "lightBlue": ["PencilIcon", "PenguinIcon", "SnowflakeIcon"],
+  "orange": ["AnchorIcon", "KeyIcon", "ManIcon", "QuestionMarkIcon"],
+  "purple": ["CandleIcon", "ScissorsIcon", "SpiderWebIcon"],
+  "red": ["LadybugIcon", "LipsIcon", "MapleIcon", "StopIcon"],
+  "yellow": ["BulbIcon", "ExclamationIcon", "SunIcon"]
+}
