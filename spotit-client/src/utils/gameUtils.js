@@ -18,3 +18,15 @@ export const getSymbolStyles = (scale) => {
     desktop: `md:${variant.desktop.w} md:${variant.desktop.h}`,
   };
 };
+
+export const getDeckBySettings = async (theme, symbolsPerCard) => {
+  try {
+    // Dynamic import based on theme and symbol count
+    const deckModule = await import(
+      `/src/assets/decks/${theme}_deck_${Number(symbolsPerCard) - 1}.json`
+    );
+    return deckModule.default;
+  } catch (error) {
+    console.error('Failed to load deck', error);
+  }
+};

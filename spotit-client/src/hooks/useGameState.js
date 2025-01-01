@@ -1,32 +1,41 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import shuffle from 'lodash.shuffle';
 
-export const useGameState = (initialDeck) => {
-  const [gameState, setGameState] = useState(() => {
-    const shuffledDeck = shuffle(initialDeck);
-    return {
-      topCard: shuffledDeck[0],
-      remainingCards: shuffledDeck.slice(1),
-      cardsRemaining: shuffledDeck.length - 1,
-    };
-  });
+export const useGameState = (deck) => {
+  const [gameState, setGameState] = useState(null);
 
-  const handleMatch = useCallback((symbol) => {
-    setGameState((prevState) => {
-      if (
-        prevState.remainingCards.length === 0 ||
-        !prevState.topCard.includes(symbol)
-      ) {
-        return prevState;
-      }
+  useEffect(() => {
+    if (deck) {
+      const shuffledDeck = shuffle(deck);
+      setGameState({
+        topCard: shuffledDeck[0],
+        remainingCards: shuffledDeck.slice(1),
+        cardsRemaining: shuffledDeck.length - 1,
+      });
+    }
+  }, [deck]);
 
-      return {
-        topCard: prevState.remainingCards[0],
-        remainingCards: prevState.remainingCards.slice(1),
-        cardsRemaining: prevState.cardsRemaining - 1,
-      };
-    });
-  }, []);
+  const handleMatch = useCallback(
+    (symbol) => {
+      if (!gameState) return;
 
-  return { ...gameState, handleMatch };
+      setGameState((prevState) => {
+        if (
+          prevState.remainingCards.length === 0 ||
+          !prevState.topCard.includes(symbol)
+        ) {
+          return prevState;
+        }
+
+        return {
+          topCard: prevState.remainingCards[0],
+          remainingCards: prevState.remainingCards.slice(1),
+          cardsRemaining: prevState.cardsRemaining - 1,
+        };
+      });
+    },
+    [gameState],
+  );
+
+  return gameState ? { ...gameState, handleMatch } : null;
 };

@@ -1,18 +1,58 @@
+import { useEffect, useState } from 'react';
 import shuffle from 'lodash.shuffle';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 import GameCard from './GameCard';
 import { useGameState } from '../../hooks/useGameState';
-import deck from '/src/assets/decks/classic_deck_7.json';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { getDeckBySettings } from '../../utils/gameUtils';
+// import staticDeck from '/src/assets/decks/classic_deck_7.json';
 
 const GameArea = () => {
-  const { topCard, remainingCards, cardsRemaining, handleMatch } =
-    useGameState(deck);
   const navigate = useNavigate();
   const location = useLocation();
+  const [deck, setDeck] = useState(null);
 
-  const params = location.state;
-  console.log(params);
+  const gameSettings = location.state || {
+    theme: 'classic',
+    difficulty: 'easy',
+    symbolsPerCard: '8',
+  };
+
+  useEffect(() => {
+    //If no settings were passed, redirect to home page
+    if (!location.state) {
+      navigate('/');
+      return;
+    }
+
+    const loadDeck = async () => {
+      try {
+        const deckData = await getDeckBySettings(
+          gameSettings.theme,
+          gameSettings.symbolsPerCard,
+        );
+        setDeck(deckData);
+      } catch {
+        const classicDeck = await import(
+          '/src/assets/decks/classic_deck_7.json'
+        );
+        setDeck(classicDeck);
+      }
+    };
+
+    loadDeck();
+  }, [
+    location.state,
+    navigate,
+    gameSettings.theme,
+    gameSettings.symbolsPerCard,
+  ]);
+
+  const gameState = useGameState(deck);
+
+  if (!deck || !gameState) return <div>Loading...</div>;
+
+  const { topCard, remainingCards, cardsRemaining, handleMatch } = gameState;
 
   return (
     <div className="relative flex flex-col" style={{ height: '100dvh' }}>
