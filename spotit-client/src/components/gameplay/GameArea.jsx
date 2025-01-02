@@ -61,7 +61,7 @@ const GameArea = () => {
       </div>
       <div className="flex-1 flex flex-col">
         <div className="flex-1 max-h-full flex items-center justify-center">
-          <GameCard symbols={topCard} />
+          <GameCard symbols={topCard} gameSettings={gameSettings} />
         </div>
 
         {remainingCards.length > 0 && (
@@ -70,6 +70,7 @@ const GameArea = () => {
               symbols={shuffle([...remainingCards[0]])}
               isInteractive
               onSymbolClick={handleMatch}
+              gameSettings={gameSettings}
             />
           </div>
         )}
