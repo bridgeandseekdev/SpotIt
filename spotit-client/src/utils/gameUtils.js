@@ -1,14 +1,39 @@
-import { SCALE_VARIANTS } from '../constants/scaleVariants';
+import { SCALE_VARIANTS, SCALE_PATTERNS } from '../constants/gameConstants';
 
 export const getRandomRotation = (isInteractive) => {
   const maxRotation = isInteractive ? -45 : 45;
   return Math.floor(Math.random() * maxRotation);
 };
 
-export const getRandomScale = () => {
-  if (Math.random() < 0.5) return 'UP';
-  if (Math.random() < 0.5) return 'DOWN';
-  return 'DEFAULT';
+export const getScale = (difficulty, symbolIndex, symbolCount) => {
+  switch (difficulty) {
+    case 'medium':
+      // Use predefined scale pattern based on symbol position
+      return SCALE_PATTERNS[symbolCount][symbolIndex] || 'DEFAULT';
+
+    case 'hard':
+      // Only use random scaling for hard mode
+      if (Math.random() < 0.33) return 'UP';
+      if (Math.random() < 0.63) return 'DOWN';
+      return 'DEFAULT';
+
+    default:
+      return 'DEFAULT';
+  }
+};
+
+export const getRotation = (difficulty, isInteractive) => {
+  switch (difficulty) {
+    case 'medium':
+      // No rotation for medium difficulty
+      return 0;
+
+    case 'hard':
+      return Math.floor(Math.random() * (isInteractive ? -45 : 45));
+
+    default:
+      return 0;
+  }
 };
 
 export const getSymbolStyles = (scale) => {
