@@ -29,7 +29,16 @@ export const getRotation = (difficulty, isInteractive) => {
       return 0;
 
     case 'hard':
-      return Math.floor(Math.random() * (isInteractive ? -45 : 45));
+      return Math.floor(
+        Math.random() *
+          (isInteractive
+            ? Math.random() < 0.33
+              ? -45
+              : 45
+            : Math.random() > 0.66
+            ? -60
+            : 60),
+      );
 
     default:
       return 0;
