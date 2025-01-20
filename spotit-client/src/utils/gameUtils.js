@@ -89,14 +89,21 @@ export const getSymbolPositions = (symbolCount) => {
   }
 };
 
+const deckModules = {
+  classic: {
+    3: () => import('/src/assets/decks/classic_deck_2.json'),
+    5: () => import('/src/assets/decks/classic_deck_4.json'),
+    8: () => import('/src/assets/decks/classic_deck_7.json'),
+  },
+};
+
 export const getDeckBySettings = async (theme, symbolsPerCard) => {
   try {
     // Dynamic import based on theme and symbol count
-    const deckModule = await import(
-      `/src/assets/decks/${theme}_deck_${Number(symbolsPerCard) - 1}.json`
-    );
+    const deckModule = await deckModules[theme][symbolsPerCard]();
     return deckModule.default;
   } catch (error) {
     console.error('Failed to load deck', error);
+    return null;
   }
 };
