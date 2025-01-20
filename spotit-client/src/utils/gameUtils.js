@@ -99,7 +99,7 @@ const deckModules = {
 
 export const getDeckBySettings = async (theme, symbolsPerCard) => {
   try {
-    // Dynamic import based on theme and symbol count
+    // Dynamic import based on theme and symbol count..
     const deckModule = await deckModules[theme][symbolsPerCard]();
     return deckModule.default;
   } catch (error) {
