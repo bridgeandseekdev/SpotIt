@@ -1,5 +1,6 @@
 /* eslint-disable react/prop-types */
 import { Route, Routes } from 'react-router-dom';
+import { GameProvider } from './context';
 
 import DarkModeSwitch from './components/DarkModeSwitch';
 import GameSettings from './components/gameplay/GameSettings';
@@ -18,11 +19,13 @@ const AppLayout = ({ children }) => {
 function App() {
   return (
     <AppLayout>
-      <Routes>
-        <Route path="/" element={<MainMenu />} />
-        <Route path="/settings/:mode" element={<GameSettings />} />
-        <Route path="/game" element={<GameArea />} />
-      </Routes>
+      <GameProvider>
+        <Routes>
+          <Route path="/" element={<MainMenu />} />
+          <Route path="/settings/:mode" element={<GameSettings />} />
+          <Route path="/game" element={<GameArea />} />
+        </Routes>
+      </GameProvider>
     </AppLayout>
   );
 }

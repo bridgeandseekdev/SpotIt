@@ -1,7 +1,7 @@
-import { useTheme } from '../context/ThemeContext';
+import { useThemeContext } from '../context';
 
 const DarkModeSwitch = () => {
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark, toggleTheme } = useThemeContext();
   return (
     <div className="absolute top-4 right-6 z-50">
       <button

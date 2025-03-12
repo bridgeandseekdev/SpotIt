@@ -3,7 +3,7 @@
 // import deck from '../assets/decks/classic_deck_7.json';
 import cards from '../assets/cards_theme/classic_7.json';
 import { ICON_MAP } from '../assets/icons';
-import { useTheme } from '../context/ThemeContext';
+import { useThemeContext } from '../context';
 
 const SymbolIcon = ({ symbol, className }) => {
   const IconComponent = ICON_MAP[symbol];
@@ -17,7 +17,7 @@ const SymbolIcon = ({ symbol, className }) => {
 };
 
 function DarkModeIconsTest() {
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark, toggleTheme } = useThemeContext();
   const cardsArray = Object.values(cards).flat();
 
   return (
