@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 const GameSettings = () => {
   const navigate = useNavigate();
   const [settings, setSettings] = useState({
-    theme: 'classic',
+    theme: 'classic', // keep this but don't show UI for it
     difficulty: 'easy',
     symbolsPerCard: '8',
   });
@@ -25,24 +25,6 @@ const GameSettings = () => {
       <h1 onClick={() => navigate(-1)}>Back</h1>
 
       <div className="space-y-6">
-        <div className="space-y-2">
-          <label htmlFor="theme" className="block text-lg font-medium">
-            Theme
-          </label>
-          <select
-            name="theme"
-            id="theme"
-            value={settings.theme}
-            onChange={handleChange}
-            className="w-full p-2 rounded border bg-background text-text-primary"
-          >
-            <option value="classic">Classic</option>
-            <option value="nature">Nature</option>
-            <option value="animals">Animals</option>
-            <option value="adult">Adult</option>
-          </select>
-        </div>
-
         <div className="space-y-2">
           <label htmlFor="difficulty" className="block text-lg font-medium">
             Difficulty
