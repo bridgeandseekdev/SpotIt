@@ -1,22 +1,15 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { DIFFICULTY_CONFIGS } from '../../constants/gameConstants';
 
 const GameSettings = () => {
   const navigate = useNavigate();
-  const [settings, setSettings] = useState({
-    theme: 'classic', // keep this but don't show UI for it
-    difficulty: 'easy',
-    symbolsPerCard: '8',
-  });
 
-  const handleChange = (e) => {
-    setSettings((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
-
-  const handleStartGame = () => {
+  const handleDifficultySelect = (difficulty) => {
+    const settings = {
+      theme: 'classic',
+      difficulty,
+      symbolsPerCard: DIFFICULTY_CONFIGS[difficulty].symbolsPerCard,
+    };
     navigate('/game', { state: settings });
   };
 
@@ -24,45 +17,22 @@ const GameSettings = () => {
     <div className="max-w-md mx-auto p-6 space-y-6">
       <h1 onClick={() => navigate(-1)}>Back</h1>
 
-      <div className="space-y-6">
-        <div className="space-y-2">
-          <label htmlFor="difficulty" className="block text-lg font-medium">
-            Difficulty
-          </label>
-          <select
-            name="difficulty"
-            id="difficulty"
-            value={settings.difficulty}
-            onChange={handleChange}
-            className="w-full p-2 rounded border bg-background text-text-primary"
+      <div className="grid grid-cols-1 gap-4">
+        {Object.entries(DIFFICULTY_CONFIGS).map(([difficulty]) => (
+          <button
+            key={difficulty}
+            onClick={() => handleDifficultySelect(difficulty)}
+            className="p-4 rounded border shadow hover:shadow-md transition-shadow"
           >
-            <option value="easy">Easy - Fixed positions and sizes</option>
-            <option value="medium">Medium - Size variations</option>
-            <option value="hard">Hard - Size and rotation variations</option>
-          </select>
-        </div>
-
-        <div className="space-y-2">
-          <label htmlFor="symbolsPerCard" className="block text-lg font-medium">
-            Symbols per Card
-          </label>
-          <select
-            name="symbolsPerCard"
-            id="symbolsPerCard"
-            value={settings.symbolsPerCard}
-            onChange={handleChange}
-            className="w-full p-2 rounded border bg-background text-text-primary"
-          >
-            <option value="3">3 Symbols (Beginner)</option>
-            <option value="5">5 Symbols (Intermediate)</option>
-            <option value="8">8 Symbols (Advanced)</option>
-          </select>
-        </div>
+            <h3 className="capitalize">{difficulty}</h3>
+            <p className="text-sm">
+              {difficulty === 'easy' && '3 symbols, fixed size'}
+              {difficulty === 'medium' && '5 symbols, varied sizes'}
+              {difficulty === 'hard' && '8 symbols, random sizes and rotations'}
+            </p>
+          </button>
+        ))}
       </div>
-
-      <button onClick={handleStartGame}>
-        <h3>Start play!</h3>
-      </button>
     </div>
   );
 };

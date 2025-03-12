@@ -38,20 +38,23 @@ export const SYMBOL_POSITIONS = {
   ],
 };
 
-// export const DIFFICULTY_CONFIGS = {
-//   easy: {
-//     allowRotation: false,
-//     useRandomScaling: false,
-//     defaultScale: 'DEFAULT',
-//   },
-//   medium: {
-//     allowRotation: false,
-//     useRandomScaling: false,
-//     useScalePatterns: true,
-//   },
-//   hard: {
-//     allowRotation: true,
-//     useRandomScaling: true,
-//     maxRotation: 45,
-//   },
-// };
+export const DIFFICULTY_CONFIGS = {
+  easy: {
+    symbolsPerCard: '3',
+    allowRotation: false,
+    useRandomScaling: false,
+    defaultScale: 'DEFAULT',
+  },
+  medium: {
+    symbolsPerCard: '5',
+    allowRotation: false,
+    useRandomScaling: false,
+    useScalePatterns: true,
+  },
+  hard: {
+    symbolsPerCard: '8',
+    allowRotation: true,
+    useRandomScaling: true,
+    maxRotation: 45,
+  },
+};
