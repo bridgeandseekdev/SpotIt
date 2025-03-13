@@ -4,8 +4,8 @@ import { GameProvider } from './context';
 
 import DarkModeSwitch from './components/DarkModeSwitch';
 import GameSettings from './components/gameplay/GameSettings';
-import GameArea from './components/gameplay/GameArea';
 import MainMenu from './components/gameplay/MainMenu';
+import GameContainer from './components/gameplay/GameContainer';
 
 const AppLayout = ({ children }) => {
   return (
@@ -23,7 +23,7 @@ function App() {
         <Routes>
           <Route path="/" element={<MainMenu />} />
           <Route path="/settings/:mode" element={<GameSettings />} />
-          <Route path="/game" element={<GameArea />} />
+          <Route path="/game" element={<GameContainer />} />
         </Routes>
       </GameProvider>
     </AppLayout>
