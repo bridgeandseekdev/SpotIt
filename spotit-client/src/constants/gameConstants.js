@@ -1,9 +1,12 @@
 export const SCALE_VARIANTS = {
-  UP: { mobile: { h: 'h-14', w: 'w-14' }, desktop: { h: 'h-20', w: 'w-20' } },
-  DOWN: { mobile: { h: 'h-8', w: 'w-8' }, desktop: { h: 'h-12', w: 'w-12' } },
-  DEFAULT: {
+  SMALL: { mobile: { h: 'h-8', w: 'w-8' }, desktop: { h: 'h-12', w: 'w-12' } },
+  MEDIUM: {
     mobile: { h: 'h-10', w: 'w-10' },
     desktop: { h: 'h-14', w: 'w-14' },
+  },
+  LARGE: {
+    mobile: { h: 'h-14', w: 'w-14' },
+    desktop: { h: 'h-20', w: 'w-20' },
   },
 };
 
@@ -35,23 +38,18 @@ export const SYMBOL_POSITIONS = {
 export const DIFFICULTY_CONFIGS = {
   easy: {
     symbolsPerCard: '3',
-    visualConfig: {
-      rotation: false,
-      scale: 'DEFAULT',
-    },
+    scale: 'MEDIUM',
+    rotation: false,
   },
   medium: {
     symbolsPerCard: '5',
-    visualConfig: {
-      rotation: false,
-      scales: ['UP', 'DEFAULT', 'UP', 'DOWN', 'DEFAULT'],
-    },
+    scalePattern: ['LARGE', 'MEDIUM', 'LARGE', 'SMALL', 'MEDIUM'],
+    rotation: false,
   },
   hard: {
     symbolsPerCard: '8',
-    visualConfig: {
-      rotation: true,
-      randomScale: true,
-    },
+    randomScale: true,
+    rotation: true,
+    maxRotation: 45,
   },
 };

@@ -1,20 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useGameContext } from '../context';
 import { getDeckBySettings } from '../utils/deckManager';
-import { useGameState } from './useGameState';
 
 export const useGameSetup = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [deck, setDeck] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const { gameState, initializeGame, handleMatch } = useGameContext();
 
-  const gameSettings = location.state || {
-    theme: 'classic',
-    difficulty: 'easy',
-    symbolsPerCard: '8',
-  };
+  const gameSettings = useMemo(
+    () =>
+      location.state || {
+        theme: 'classic',
+        difficulty: 'easy',
+        symbolsPerCard: '3',
+      },
+    [location.state],
+  );
 
   useEffect(() => {
     if (!location.state) {
@@ -22,36 +26,28 @@ export const useGameSetup = () => {
       return;
     }
 
-    const loadDeck = async () => {
+    const loadGame = async () => {
       try {
-        const deckData = await getDeckBySettings(
+        const deck = await getDeckBySettings(
           gameSettings.theme,
           gameSettings.symbolsPerCard,
         );
-        setDeck(deckData);
+        initializeGame(deck, gameSettings);
         setIsLoading(false);
-      } catch (err) {
-        setError('Failed to load game deck');
-        alert('Failed to load game deck', err);
+      } catch {
+        setError('Failed to load game');
         setIsLoading(false);
       }
     };
 
-    loadDeck();
-  }, [
-    location.state,
-    navigate,
-    gameSettings.theme,
-    gameSettings.symbolsPerCard,
-  ]);
-
-  const gameState = useGameState(deck);
+    loadGame();
+  }, [location.state, navigate, gameSettings, initializeGame]);
 
   return {
     isLoading,
     error,
     gameState,
     gameSettings,
-    handleMatch: gameState?.handleMatch,
+    handleMatch,
   };
 };

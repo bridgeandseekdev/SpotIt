@@ -1,16 +1,17 @@
 import { useState, useCallback } from 'react';
 import GameContext from './GameContext';
 import shuffle from 'lodash.shuffle';
-import PropTypes from 'prop-types';
 
 export const GameProvider = ({ children }) => {
   const [deck, setDeck] = useState(null);
   const [gameState, setGameState] = useState(null);
+  const [gameSettings, setGameSettings] = useState(null);
 
-  const initializeGame = useCallback((newDeck) => {
+  const initializeGame = useCallback((newDeck, settings) => {
     if (newDeck) {
       const shuffledDeck = shuffle(newDeck);
       setDeck(newDeck);
+      setGameSettings(settings);
       setGameState({
         topCard: shuffledDeck[0],
         remainingCards: shuffledDeck.slice(1),
@@ -46,6 +47,7 @@ export const GameProvider = ({ children }) => {
       value={{
         deck,
         gameState,
+        gameSettings,
         initializeGame,
         handleMatch,
       }}
@@ -53,8 +55,4 @@ export const GameProvider = ({ children }) => {
       {children}
     </GameContext.Provider>
   );
-};
-
-GameProvider.propTypes = {
-  children: PropTypes.node.isRequired,
 };

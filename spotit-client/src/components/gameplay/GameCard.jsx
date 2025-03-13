@@ -1,14 +1,10 @@
-/* eslint-disable react/prop-types */
 import { getBaseLayout } from '../../utils/layoutEngine';
 import { getSymbolScale, getSymbolRotation } from '../../utils/visualEngine';
+import { useGameContext } from '../../context';
 import Symbol from './Symbol';
 
-const GameCard = ({
-  symbols,
-  isInteractive = false,
-  onSymbolClick,
-  gameSettings,
-}) => {
+const GameCard = ({ symbols, isInteractive = false, onSymbolClick }) => {
+  const { gameSettings } = useGameContext();
   const { symbolsPerCard, difficulty } = gameSettings;
   const { positions, containerClass } = getBaseLayout(symbolsPerCard);
 
@@ -21,8 +17,8 @@ const GameCard = ({
           key={`${symbol}-${index}`}
           symbol={symbol}
           position={positions[index]}
-          rotation={getSymbolRotation(difficulty, isInteractive)}
-          scale={getSymbolScale(difficulty, index, symbolsPerCard)}
+          rotation={getSymbolRotation(difficulty)}
+          scale={getSymbolScale(difficulty, index)}
           isInteractive={isInteractive}
           onSymbolClick={onSymbolClick}
         />

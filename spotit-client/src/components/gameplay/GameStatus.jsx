@@ -1,13 +1,15 @@
-import PropTypes from 'prop-types';
+import { useGameContext } from '../../context';
 
-const GameStatus = ({ cardsRemaining }) => (
-  <div className="flex-none text-center pb-4">
-    <h2 className="text-lg font-semibold">Cards Remaining: {cardsRemaining}</h2>
-  </div>
-);
+const GameStatus = () => {
+  const { gameState } = useGameContext();
 
-GameStatus.propTypes = {
-  cardsRemaining: PropTypes.number.isRequired,
+  return (
+    <div className="flex-none text-center pb-4">
+      <h2 className="text-lg font-semibold">
+        Cards Remaining: {gameState.cardsRemaining}
+      </h2>
+    </div>
+  );
 };
 
 export default GameStatus;

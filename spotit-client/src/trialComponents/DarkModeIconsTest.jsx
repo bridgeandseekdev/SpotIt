@@ -1,5 +1,3 @@
-/* eslint-disable react/prop-types */
-
 // import deck from '../assets/decks/classic_deck_7.json';
 import cards from '../assets/cards_theme/classic_7.json';
 import { ICON_MAP } from '../assets/icons';

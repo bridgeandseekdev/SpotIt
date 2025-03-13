@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import { Route, Routes } from 'react-router-dom';
 import { GameProvider } from './context';
 

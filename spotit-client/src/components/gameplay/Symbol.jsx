@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 import { ICON_MAP } from '../../assets/icons';
 import { getSymbolStyles } from '../../utils/visualEngine';
 
