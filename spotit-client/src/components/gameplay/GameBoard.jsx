@@ -29,9 +29,9 @@ GameBoard.propTypes = {
   gameState: PropTypes.shape({
     topCard: PropTypes.array.isRequired,
     remainingCards: PropTypes.array.isRequired,
-  }).isRequired,
-  gameSettings: PropTypes.object.isRequired,
-  onMatch: PropTypes.func.isRequired,
+  }),
+  gameSettings: PropTypes.object,
+  onMatch: PropTypes.func,
 };
 
 export default GameBoard;

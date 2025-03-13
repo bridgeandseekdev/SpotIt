@@ -11,6 +11,7 @@ const GameContainer = () => {
 
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
+  if (!gameState) return <div>Initializing game...</div>;
 
   return (
     <div className="relative flex flex-col" style={{ height: '100dvh' }}>

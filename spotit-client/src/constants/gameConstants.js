@@ -7,12 +7,6 @@ export const SCALE_VARIANTS = {
   },
 };
 
-export const SCALE_PATTERNS = {
-  3: ['DEFAULT', 'UP', 'DOWN'],
-  5: ['UP', 'DEFAULT', 'UP', 'DOWN', 'DEFAULT'],
-  8: ['UP', 'DEFAULT', 'DOWN', 'UP', 'DOWN', 'DEFAULT', 'UP', 'DEFAULT'],
-};
-
 export const SYMBOL_POSITIONS = {
   3: [
     { top: '25%', left: '50%', transform: 'translate(-50%, 0)' },
@@ -41,20 +35,23 @@ export const SYMBOL_POSITIONS = {
 export const DIFFICULTY_CONFIGS = {
   easy: {
     symbolsPerCard: '3',
-    allowRotation: false,
-    useRandomScaling: false,
-    defaultScale: 'DEFAULT',
+    visualConfig: {
+      rotation: false,
+      scale: 'DEFAULT',
+    },
   },
   medium: {
     symbolsPerCard: '5',
-    allowRotation: false,
-    useRandomScaling: false,
-    useScalePatterns: true,
+    visualConfig: {
+      rotation: false,
+      scales: ['UP', 'DEFAULT', 'UP', 'DOWN', 'DEFAULT'],
+    },
   },
   hard: {
     symbolsPerCard: '8',
-    allowRotation: true,
-    useRandomScaling: true,
-    maxRotation: 45,
+    visualConfig: {
+      rotation: true,
+      randomScale: true,
+    },
   },
 };
