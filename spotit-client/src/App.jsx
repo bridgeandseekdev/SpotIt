@@ -22,7 +22,7 @@ function App() {
         <Routes>
           <Route path="/" element={<MainMenu />} />
           <Route path="/settings/:mode" element={<GameSettings />} />
-          <Route path="/game" element={<GameContainer />} />
+          <Route path="/game/:mode" element={<GameContainer />} />
         </Routes>
       </GameProvider>
     </AppLayout>

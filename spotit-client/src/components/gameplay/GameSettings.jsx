@@ -1,16 +1,18 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { DIFFICULTY_CONFIGS } from '../../constants/gameConstants';
 
 const GameSettings = () => {
   const navigate = useNavigate();
+  const { mode } = useParams();
 
   const handleDifficultySelect = (difficulty) => {
     const settings = {
       theme: 'classic',
       difficulty,
       symbolsPerCard: DIFFICULTY_CONFIGS[difficulty].symbolsPerCard,
+      mode,
     };
-    navigate('/game', { state: settings });
+    navigate(`/game/${settings.mode}`, { state: settings });
   };
 
   return (

@@ -8,14 +8,22 @@ const MainMenu = () => {
 
       <button onClick={() => navigate('/settings/practice')}>
         <h3>Practice Mode</h3>
+        <p>Train at your own pace</p>
+      </button>
+
+      <button onClick={() => navigate('/settings/timed')}>
+        <h3>Timed Challenge</h3>
+        <p>Race against the clock!</p>
       </button>
 
       <button onClick={() => navigate('/settings/practice')}>
-        <h3>Time Scramble</h3>
+        <h3>2 Players</h3>
+        <p>Challenge a friend</p>
       </button>
 
       <button onClick={() => navigate('/settings/practice')}>
-        <h3>Online, (double & multiplayer)</h3>
+        <h3>Computer</h3>
+        <p>Play with a bot</p>
       </button>
     </div>
   );
