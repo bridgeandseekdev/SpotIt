@@ -16,6 +16,7 @@ export const useGameSetup = () => {
         theme: 'classic',
         difficulty: 'easy',
         symbolsPerCard: '3',
+        mode: 'practice',
       },
     [location.state],
   );

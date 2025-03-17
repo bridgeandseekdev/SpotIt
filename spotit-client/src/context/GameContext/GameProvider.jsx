@@ -1,6 +1,7 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import GameContext from './GameContext';
 import shuffle from 'lodash.shuffle';
+import { DIFFICULTY_CONFIGS } from '../../constants/gameConstants';
 
 // Utility function for getting next game state
 const getNextGameState = (prevState) => {
@@ -25,6 +26,9 @@ export const GameProvider = ({ children }) => {
   const [deck, setDeck] = useState(null);
   const [gameState, setGameState] = useState(null);
   const [gameSettings, setGameSettings] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(
+    DIFFICULTY_CONFIGS[gameSettings?.difficulty]?.timerSeconds || 8,
+  );
 
   const initializeGame = useCallback((newDeck, settings) => {
     if (newDeck) {
@@ -42,38 +46,49 @@ export const GameProvider = ({ children }) => {
     }
   }, []);
 
-  const handleMatch = useCallback((symbol) => {
-    setGameState((prevState) => {
-      if (!prevState.topCardInPile.includes(symbol)) {
-        return prevState;
+  const handleMatch = useCallback(
+    (symbol) => {
+      if (gameState.topCardInPile.includes(symbol)) {
+        setGameState((prevState) => getNextGameState(prevState));
+        setTimeLeft(DIFFICULTY_CONFIGS[gameSettings.difficulty].timerSeconds);
       }
-      return getNextGameState(prevState);
-    });
-  }, []);
+    },
+    [gameState?.topCardInPile],
+  );
+
+  useEffect(() => {
+    if (!gameState) return;
+    let timer;
+
+    if (gameSettings.mode === 'timed' && gameState.cardsRemaining >= 1) {
+      timer = setInterval(() => {
+        setTimeLeft((prevTime) => {
+          if (prevTime < 1) {
+            clearInterval(timer);
+            moveToNextCard();
+            return DIFFICULTY_CONFIGS[gameSettings.difficulty].timerSeconds;
+          }
+          return prevTime - 1;
+        });
+      }, 1000);
+    }
+
+    return () => clearInterval(timer);
+  }, [gameState?.cardsRemaining]);
 
   const moveToNextCard = useCallback(() => {
     setGameState((prevState) => getNextGameState(prevState));
   }, []);
 
-  // Memoize context value to prevent unnecessary rerenders
-  const contextValue = useMemo(
-    () => ({
-      deck,
-      gameState,
-      gameSettings,
-      initializeGame,
-      handleMatch,
-      moveToNextCard,
-    }),
-    [
-      deck,
-      gameState,
-      gameSettings,
-      initializeGame,
-      handleMatch,
-      moveToNextCard,
-    ],
-  );
+  const contextValue = {
+    deck,
+    gameState,
+    gameSettings,
+    initializeGame,
+    handleMatch,
+    moveToNextCard,
+    timeLeft,
+  };
 
   return (
     <GameContext.Provider value={contextValue}>{children}</GameContext.Provider>
