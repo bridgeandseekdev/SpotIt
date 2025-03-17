@@ -6,12 +6,11 @@ const GameBoard = () => {
   const { topCardInPile, topCardInUserDeck } = gameState;
 
   return (
-    <div className="flex-1 flex flex-col">
-      <div className="flex-1 max-h-full flex items-center justify-center">
-        <GameCard symbols={topCardInPile} />
-      </div>
-
-      {topCardInUserDeck && (
+    topCardInUserDeck && (
+      <div className="flex-1 flex flex-col">
+        <div className="flex-1 max-h-full flex items-center justify-center">
+          <GameCard symbols={topCardInPile} />
+        </div>
         <div className="flex-1 max-h-full flex items-center justify-center">
           <GameCard
             symbols={topCardInUserDeck}
@@ -19,8 +18,8 @@ const GameBoard = () => {
             onSymbolClick={handleMatch}
           />
         </div>
-      )}
-    </div>
+      </div>
+    )
   );
 };
 

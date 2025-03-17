@@ -18,13 +18,18 @@ const AppLayout = ({ children }) => {
 function App() {
   return (
     <AppLayout>
-      <GameProvider>
-        <Routes>
-          <Route path="/" element={<MainMenu />} />
-          <Route path="/settings/:mode" element={<GameSettings />} />
-          <Route path="/game/:mode" element={<GameContainer />} />
-        </Routes>
-      </GameProvider>
+      <Routes>
+        <Route path="/" element={<MainMenu />} />
+        <Route path="/settings/:mode" element={<GameSettings />} />
+        <Route
+          path="/game/:mode"
+          element={
+            <GameProvider>
+              <GameContainer />
+            </GameProvider>
+          }
+        />
+      </Routes>
     </AppLayout>
   );
 }

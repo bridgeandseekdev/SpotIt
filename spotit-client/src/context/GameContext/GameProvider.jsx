@@ -4,7 +4,7 @@ import shuffle from 'lodash.shuffle';
 import { DIFFICULTY_CONFIGS } from '../../constants/gameConstants';
 
 // Utility function for getting next game state
-const getNextGameState = (prevState) => {
+const getNextGameState = (prevState, isMatch) => {
   if (prevState.remainingCards.length === 0) {
     return prevState;
   }
@@ -18,11 +18,12 @@ const getNextGameState = (prevState) => {
     remainingCards,
     topCardInUserDeck,
     cardsRemaining: prevState.cardsRemaining - 1,
-    score: prevState.score + 1,
+    score: isMatch ? prevState.score + 1 : prevState.score,
   };
 };
 
 export const GameProvider = ({ children }) => {
+  const [originalDeck, setOriginalDeck] = useState(null);
   const [deck, setDeck] = useState(null);
   const [gameState, setGameState] = useState(null);
   const [gameSettings, setGameSettings] = useState(null);
@@ -43,6 +44,8 @@ export const GameProvider = ({ children }) => {
     (newDeck, settings) => {
       // Clean up any existing timer
       clearGameTimer();
+
+      if (!originalDeck) setOriginalDeck(newDeck); // If the deck is already loaded and player is trying to play again after one round
 
       if (newDeck) {
         const shuffledDeck = shuffle(newDeck);
@@ -65,7 +68,7 @@ export const GameProvider = ({ children }) => {
         }
       }
     },
-    [clearGameTimer],
+    [clearGameTimer, originalDeck],
   );
 
   // Handle match logic - use callback to ensure stable reference for child components
@@ -78,7 +81,7 @@ export const GameProvider = ({ children }) => {
         isProcessingAction.current = true;
 
         // Update game state with next card
-        setGameState((prevState) => getNextGameState(prevState));
+        setGameState((prevState) => getNextGameState(prevState, true));
         setTimeLeft(DIFFICULTY_CONFIGS[gameSettings.difficulty].timerSeconds);
         isProcessingAction.current = false;
       }
@@ -149,6 +152,7 @@ export const GameProvider = ({ children }) => {
     handleMatch,
     moveToNextCard,
     timeLeft,
+    originalDeck,
   };
 
   return (
