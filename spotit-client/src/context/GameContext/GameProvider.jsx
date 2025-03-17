@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import GameContext from './GameContext';
 import shuffle from 'lodash.shuffle';
 import { DIFFICULTY_CONFIGS } from '../../constants/gameConstants';
@@ -26,59 +26,120 @@ export const GameProvider = ({ children }) => {
   const [deck, setDeck] = useState(null);
   const [gameState, setGameState] = useState(null);
   const [gameSettings, setGameSettings] = useState(null);
-  const [timeLeft, setTimeLeft] = useState(
-    DIFFICULTY_CONFIGS[gameSettings?.difficulty]?.timerSeconds || 8,
-  );
+  const [timeLeft, setTimeLeft] = useState(0);
+  const timerRef = useRef(null);
+  const isProcessingAction = useRef(false);
 
-  const initializeGame = useCallback((newDeck, settings) => {
-    if (newDeck) {
-      const shuffledDeck = shuffle(newDeck);
-      setDeck(newDeck);
-      setGameSettings(settings);
-
-      setGameState({
-        topCardInPile: shuffledDeck[0],
-        remainingCards: shuffledDeck.slice(1),
-        topCardInUserDeck: shuffledDeck[1] || null,
-        cardsRemaining: shuffledDeck.length - 1,
-        score: 0,
-      });
+  // Clear any existing timer
+  const clearGameTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
     }
   }, []);
 
-  const handleMatch = useCallback(
-    (symbol) => {
-      if (gameState.topCardInPile.includes(symbol)) {
-        setGameState((prevState) => getNextGameState(prevState));
-        setTimeLeft(DIFFICULTY_CONFIGS[gameSettings.difficulty].timerSeconds);
+  // Initialize game with new deck and settings
+  const initializeGame = useCallback(
+    (newDeck, settings) => {
+      // Clean up any existing timer
+      clearGameTimer();
+
+      if (newDeck) {
+        const shuffledDeck = shuffle(newDeck);
+        setDeck(newDeck);
+        setGameSettings(settings);
+
+        const initialState = {
+          topCardInPile: shuffledDeck[0],
+          remainingCards: shuffledDeck.slice(1),
+          topCardInUserDeck: shuffledDeck[1] || null,
+          cardsRemaining: shuffledDeck.length - 1,
+          score: 0,
+        };
+
+        setGameState(initialState);
+
+        // Set initial timer value
+        if (settings) {
+          setTimeLeft(DIFFICULTY_CONFIGS[settings.difficulty].timerSeconds);
+        }
       }
     },
-    [gameState?.topCardInPile],
+    [clearGameTimer],
   );
 
-  useEffect(() => {
-    if (!gameState) return;
-    let timer;
+  // Handle match logic - use callback to ensure stable reference for child components
+  const handleMatch = useCallback(
+    (symbol) => {
+      if (!gameState || !gameSettings || isProcessingAction.current) return;
 
-    if (gameSettings.mode === 'timed' && gameState.cardsRemaining >= 1) {
-      timer = setInterval(() => {
+      // Check if the symbol matches
+      if (gameState.topCardInPile.includes(symbol)) {
+        isProcessingAction.current = true;
+
+        // Update game state with next card
+        setGameState((prevState) => getNextGameState(prevState));
+        setTimeLeft(DIFFICULTY_CONFIGS[gameSettings.difficulty].timerSeconds);
+        isProcessingAction.current = false;
+      }
+    },
+    [gameState, gameSettings],
+  );
+
+  // Move to next card - use callback to ensure stable reference
+  const moveToNextCard = useCallback(() => {
+    if (!gameState || !gameSettings || isProcessingAction.current) return;
+
+    isProcessingAction.current = true;
+
+    // Update game state with next card
+    setGameState((prevState) => getNextGameState(prevState));
+    setTimeLeft(DIFFICULTY_CONFIGS[gameSettings.difficulty].timerSeconds);
+    isProcessingAction.current = false;
+  }, [gameState, gameSettings]);
+
+  // Setup and manage the timer
+  useEffect(() => {
+    let count = 0;
+    // Only set up timer if all necessary state exists
+    if (!gameState || !gameSettings || gameState.cardsRemaining < 1) {
+      return;
+    }
+
+    // Clear any previous timer
+    clearGameTimer();
+    console.log('Timer cleared for these many times', count++);
+
+    // Only create timer if we're in timed mode
+    if (gameSettings.mode === 'timed') {
+      timerRef.current = setInterval(() => {
         setTimeLeft((prevTime) => {
-          if (prevTime < 1) {
-            clearInterval(timer);
-            moveToNextCard();
-            return DIFFICULTY_CONFIGS[gameSettings.difficulty].timerSeconds;
+          // If timer reaches zero, move to next card
+          if (prevTime <= 1) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+
+            // Ensure we're not already processing an action
+            if (!isProcessingAction.current) {
+              moveToNextCard();
+            }
+            return 0;
           }
           return prevTime - 1;
         });
       }, 1000);
     }
 
-    return () => clearInterval(timer);
-  }, [gameState?.cardsRemaining]);
+    // Cleanup timer when component unmounts or dependencies change
+    return clearGameTimer;
+  }, [gameSettings, gameState, clearGameTimer, moveToNextCard]);
 
-  const moveToNextCard = useCallback(() => {
-    setGameState((prevState) => getNextGameState(prevState));
-  }, []);
+  // Separate effect for starting/stopping timer based on game state
+  useEffect(() => {
+    if (!gameState || gameState.cardsRemaining < 1) {
+      clearGameTimer();
+    }
+  }, [gameState, clearGameTimer]);
 
   const contextValue = {
     deck,
