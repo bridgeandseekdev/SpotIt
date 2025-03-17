@@ -46,13 +46,13 @@ export const DIFFICULTY_CONFIGS = {
     symbolsPerCard: '5',
     scalePattern: ['LARGE', 'MEDIUM', 'LARGE', 'SMALL', 'MEDIUM'],
     rotation: false,
-    timerSeconds: 5,
+    timerSeconds: 10,
   },
   hard: {
     symbolsPerCard: '8',
     randomScale: true,
     rotation: true,
     maxRotation: 45,
-    timerSeconds: 3,
+    timerSeconds: 15,
   },
 };
