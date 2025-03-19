@@ -103,7 +103,6 @@ export const GameProvider = ({ children }) => {
 
   // Setup and manage the timer
   useEffect(() => {
-    let count = 0;
     // Only set up timer if all necessary state exists
     if (!gameState || !gameSettings || gameState.cardsRemaining < 1) {
       return;
@@ -111,7 +110,6 @@ export const GameProvider = ({ children }) => {
 
     // Clear any previous timer
     clearGameTimer();
-    console.log('Timer cleared for these many times', count++);
 
     // Only create timer if we're in timed mode
     if (gameSettings.mode === 'timed') {
@@ -138,11 +136,11 @@ export const GameProvider = ({ children }) => {
   }, [gameSettings, gameState, clearGameTimer, moveToNextCard]);
 
   // Separate effect for starting/stopping timer based on game state
-  useEffect(() => {
-    if (!gameState || gameState.cardsRemaining < 1) {
-      clearGameTimer();
-    }
-  }, [gameState, clearGameTimer]);
+  // useEffect(() => {
+  //   if (!gameState || gameState.cardsRemaining < 1) {
+  //     clearGameTimer();
+  //   }
+  // }, [gameState, clearGameTimer]);
 
   const contextValue = {
     deck,

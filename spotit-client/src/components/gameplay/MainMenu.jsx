@@ -21,7 +21,7 @@ const MainMenu = () => {
         <p>Challenge a friend</p>
       </button>
 
-      <button onClick={() => navigate('/settings/practice')}>
+      <button onClick={() => navigate('/settings/bot')}>
         <h3>Computer</h3>
         <p>Play with a bot</p>
       </button>
