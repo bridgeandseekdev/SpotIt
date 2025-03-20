@@ -136,11 +136,11 @@ export const GameProvider = ({ children }) => {
   }, [gameSettings, gameState, clearGameTimer, moveToNextCard]);
 
   // Separate effect for starting/stopping timer based on game state
-  // useEffect(() => {
-  //   if (!gameState || gameState.cardsRemaining < 1) {
-  //     clearGameTimer();
-  //   }
-  // }, [gameState, clearGameTimer]);
+  useEffect(() => {
+    if (!gameState || gameState.cardsRemaining < 1) {
+      clearGameTimer();
+    }
+  }, [gameState, clearGameTimer]);
 
   const contextValue = {
     deck,

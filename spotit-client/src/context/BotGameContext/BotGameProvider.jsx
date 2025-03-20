@@ -75,7 +75,7 @@ export const BotGameProvider = ({ children }) => {
       if (newDeck) {
         const shuffledDeck = shuffle(newDeck);
         const topCardInPile = shuffledDeck[0];
-        const { userDeck, botDeck } = splitDeckInHalf(shuffledDeck);
+        const [userDeck, botDeck] = splitDeckInHalf(shuffledDeck.slice(1));
         const initialState = {
           topCardInPile,
           userDeckState: {
@@ -124,6 +124,7 @@ export const BotGameProvider = ({ children }) => {
     if (
       !gameState ||
       !gameSettings ||
+      gameState.userDeckState.cardsRemaining < 1 ||
       gameState.botDeckState.cardsRemaining < 1
     ) {
       return;
@@ -136,10 +137,21 @@ export const BotGameProvider = ({ children }) => {
       if (!isProcessingAction.current) {
         handleMatch(null, 'bot');
       }
-    }, Math.floor(Math.random() * 2001) + 1000);
+    }, Math.floor(Math.random() * 10001) + 1000);
 
     return clearBotTimer;
   }, [clearBotTimer, gameSettings, gameState, handleMatch]);
+
+  // Separate effect for starting/stopping timer based on game state
+  useEffect(() => {
+    if (
+      !gameState ||
+      gameState.userDeckState.cardsRemaining < 1 ||
+      gameState.botDeckState.cardsRemaining < 1
+    ) {
+      clearBotTimer();
+    }
+  }, [gameState, clearBotTimer]);
 
   const contextValue = {
     gameState,

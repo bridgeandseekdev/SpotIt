@@ -1,10 +1,12 @@
 import { Route, Routes } from 'react-router-dom';
-import { GameProvider } from './context';
+import { BotGameProvider, GameProvider } from './context';
 
 import DarkModeSwitch from './components/DarkModeSwitch';
 import GameSettings from './components/gameplay/GameSettings';
 import MainMenu from './components/gameplay/MainMenu';
 import GameContainer from './components/gameplay/GameContainer';
+import GameRouteWrapper from './components/gameplay/GameRouteWrapper';
+import BotGameContainer from './components/gameplay/BotGameContainer';
 
 const AppLayout = ({ children }) => {
   return (
@@ -24,9 +26,26 @@ function App() {
         <Route
           path="/game/:mode"
           element={
-            <GameProvider>
-              <GameContainer />
-            </GameProvider>
+            <GameRouteWrapper>
+              {(params) => {
+                const mode = params.mode;
+                switch (mode) {
+                  case 'bot':
+                    return (
+                      <BotGameProvider>
+                        <BotGameContainer />
+                      </BotGameProvider>
+                    );
+
+                  default:
+                    return (
+                      <GameProvider>
+                        <GameContainer />
+                      </GameProvider>
+                    );
+                }
+              }}
+            </GameRouteWrapper>
           }
         />
       </Routes>

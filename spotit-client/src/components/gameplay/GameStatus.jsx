@@ -17,7 +17,7 @@ const GameStatus = () => {
       {gameSettings?.mode === 'timed' && gameState.cardsRemaining ? (
         <GameTimer timeLeft={timeLeft} difficulty={gameSettings.difficulty} />
       ) : null}
-      <GameScore score={gameState.score} total={originalDeck.length} />
+      <GameScore score={gameState.score} total={originalDeck.length - 1} />
       {!gameState.cardsRemaining && (
         <div>
           <button
