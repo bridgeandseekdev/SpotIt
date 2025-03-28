@@ -11,6 +11,8 @@ export const ThemeProvider = ({ children }) => {
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
 
+  const [isRefactoredVersion, setIsRefactoredVersion] = useState(true);
+
   useEffect(() => {
     //Update document class when theme changes
     document.documentElement.classList.toggle('dark', isDark);
@@ -19,9 +21,12 @@ export const ThemeProvider = ({ children }) => {
   }, [isDark]);
 
   const toggleTheme = () => setIsDark((prev) => !prev);
+  const toggleRefactoredApp = () => setIsRefactoredVersion((prev) => !prev);
 
   return (
-    <ThemeContext.Provider value={{ isDark, toggleTheme }}>
+    <ThemeContext.Provider
+      value={{ isDark, toggleTheme, toggleRefactoredApp, isRefactoredVersion }}
+    >
       {children}
     </ThemeContext.Provider>
   );
