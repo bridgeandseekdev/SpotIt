@@ -12,14 +12,7 @@ const SymbolIcon = ({ symbol, className }) => {
   return <IconComponent className={className} aria-label={symbol} />;
 };
 
-const Symbol = ({
-  symbol,
-  position,
-  rotation,
-  scale,
-  isInteractive,
-  onSymbolClick,
-}) => {
+const Symbol = ({ symbol, position, rotation, scale, onClick, type }) => {
   const styles = getSymbolStyles(scale);
   const symbolContent = (
     <SymbolIcon symbol={symbol} className="w-full h-full" />
@@ -33,17 +26,15 @@ const Symbol = ({
         transform: `${position.transform || ''} rotate(${rotation}deg)`,
       }}
     >
-      {isInteractive ? (
-        <button
-          onClick={() => onSymbolClick(symbol)}
-          className="w-full h-full"
-          aria-label={`Select ${symbol}`}
-        >
-          {symbolContent}
-        </button>
-      ) : (
-        symbolContent
-      )}
+      <button
+        onClick={() => onClick(symbol)}
+        className={`w-full h-full ${
+          type === 'player' ? 'cursor-pointer' : 'cursor-default'
+        }`}
+        aria-label={`Select ${symbol}`}
+      >
+        {symbolContent}
+      </button>
     </div>
   );
 };

@@ -1,5 +1,12 @@
 //Version used for refactoring the entire codebase.
-import { createContext, useReducer, useContext, useEffect } from 'react';
+import {
+  createContext,
+  useReducer,
+  useContext,
+  useEffect,
+  useCallback,
+  useRef,
+} from 'react';
 import {
   BrowserRouter as Router,
   Routes,
@@ -10,6 +17,7 @@ import { getBaseLayout } from './utils/layoutEngine';
 import { getSymbolRotation, getSymbolScale } from './utils/visualEngine';
 import Symbol from './components/gameplay/Symbol';
 import { DIFFICULTY_CONFIGS } from './constants/gameConstants';
+import shuffle from 'lodash.shuffle';
 
 // src/context/GameContext.jsx
 const GameContext = createContext();
@@ -26,6 +34,11 @@ const initialState = {
     cardsRemaining: 0,
   },
   opponent: null,
+  timer: {
+    enabled: false,
+    duration: 0,
+    remaining: 0,
+  },
 };
 
 function gameReducer(state, action) {
@@ -40,6 +53,18 @@ function gameReducer(state, action) {
       return { ...state, ...action.payload };
     case 'INITIALIZE_GAME_ERROR':
       return { ...state, gameStatus: 'error', error: action.payload };
+    case 'MATCH_FOUND':
+      return handleMatchFound(state, action.payload);
+    case 'UPDATE_TIMER':
+      return {
+        ...state,
+        timer: {
+          ...state.timer,
+          remaining: action.payload,
+        },
+      };
+    case 'TIMER_EXPIRED':
+      return handleTimerExpired(state);
     case 'RESET_GAME':
       return initialState;
     default:
@@ -58,7 +83,7 @@ async function initializeGame(mode, difficulty) {
     pileCard,
   };
 
-  if (mode === 'practice') {
+  if (mode === 'practice' || mode === 'timed') {
     return {
       ...commonState,
       player: {
@@ -68,9 +93,48 @@ async function initializeGame(mode, difficulty) {
         cardsRemaining: fullDeck.length,
       },
       opponent: null,
+      timer:
+        mode === 'timed'
+          ? {
+              enabled: true,
+              duration: DIFFICULTY_CONFIGS[difficulty].timerSeconds,
+              remaining: DIFFICULTY_CONFIGS[difficulty].timerSeconds,
+              type: 'countdown',
+            }
+          : { enabled: false },
     };
   }
-  return commonState;
+}
+
+function handleMatchFound(state) {
+  if (state.gameMode === 'practice') {
+    const newDeck = [...state.player.deck];
+    newDeck.shift(); //Remove the matched card
+
+    return {
+      ...state,
+      pileCard: state.player.currentCard,
+      player: {
+        ...state.player,
+        deck: newDeck,
+        currentCard: newDeck.length > 0 ? newDeck[0] : null,
+        cardsRemaining: newDeck.length,
+        score: state.player.score + 1,
+      },
+      gameStatus: newDeck.length === 0 ? 'game_over' : 'playing',
+    };
+  }
+  return state;
+}
+
+function handleTimerExpired(state) {
+  return {
+    ...state,
+    timer: {
+      ...state.timer,
+      remaining: state.timer.duration, //reset timer
+    },
+  };
 }
 
 export function GameProvider({ children }) {
@@ -92,6 +156,11 @@ export function GameProvider({ children }) {
     setDifficulty: (difficulty) =>
       dispatch({ type: 'SET_DIFFICULTY', payload: difficulty }),
     initializeGame: startGame,
+    handleMatchFound: (symbol) =>
+      dispatch({ type: 'MATCH_FOUND', payload: symbol }),
+    updateTimer: (newTime) =>
+      dispatch({ type: 'UPDATE_TIMER', payload: newTime }),
+    timerExpired: () => dispatch({ type: 'TIMER_EXPIRED' }),
     resetGame: () => dispatch({ type: 'RESET_GAME' }),
   };
 
@@ -128,7 +197,6 @@ const getDeckBySettings = async (theme, symbolsPerCard) => {
 export async function loadDeck(difficulty) {
   const { symbolsPerCard } = DIFFICULTY_CONFIGS[difficulty];
   const positions = getBaseLayout(symbolsPerCard).positions;
-  const baseRotation = getSymbolRotation(difficulty);
 
   const rawDeck = await (async () => {
     switch (difficulty) {
@@ -144,18 +212,72 @@ export async function loadDeck(difficulty) {
   })();
 
   // Transform each card to include pre-calculated layout values
-  return rawDeck.map((card) =>
-    card.map((symbol, index) => ({
-      symbol,
-      position: positions[index],
-      rotation: baseRotation,
-      scale: getSymbolScale(difficulty, index),
-    })),
+  return shuffle(
+    rawDeck.map((card) =>
+      card.map((symbol, index) => ({
+        symbol,
+        position: positions[index],
+        rotation: getSymbolRotation(difficulty),
+        scale: getSymbolScale(difficulty, index),
+      })),
+    ),
   );
 }
 
+function findMatchingSymbol(card1, card2) {
+  const card1Symbols = card1.map((item) => item.symbol);
+  const card2Symbols = card2.map((item) => item.symbol);
+
+  // Find the symbol that exists in both cards
+  for (const symbol of card1Symbols) {
+    if (card2Symbols.includes(symbol)) {
+      return symbol;
+    }
+  }
+
+  return null;
+}
+
+// src/hooks/useCardMatching.js
+function useCardMatching() {
+  const { player, pileCard, handleMatchFound } = useGameContext();
+  const checkMatch = useCallback(
+    (clickedSymbol) => {
+      if (!pileCard || !player.currentCard) return false;
+
+      const matchingSymbol = findMatchingSymbol(pileCard, player.currentCard);
+      if (matchingSymbol === clickedSymbol) {
+        handleMatchFound(clickedSymbol);
+        return true;
+      }
+      return false;
+    },
+    [pileCard, player.currentCard, handleMatchFound],
+  );
+  return { checkMatch };
+}
+
+function useTimerEffect() {
+  const { timer, updateTimer, timerExpired } = useGameContext();
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    if (timer.enabled && timer.remaining > 0) {
+      timerRef.current = setInterval(() => {
+        updateTimer(timer.remaining - 1);
+      }, 1000);
+
+      return () => clearInterval(timerRef.current);
+    } else if (timer.enabled && timer.remaining <= 0) {
+      clearInterval(timerRef.current);
+      timerExpired();
+    }
+  }, [timer.enabled, timer.remaining, timerExpired, updateTimer]);
+}
+
 // src/components/common/Card.jsx
-function Card({ card, type }) {
+function Card({ card, type, onSymbolClick }) {
+  if (!card) return null;
   return (
     <div
       className={`relative h-[80%] sm:h-[90%] aspect-square rounded-full bg-bg-secondary dark:bg-bg-dark-primary border ${
@@ -171,6 +293,8 @@ function Card({ card, type }) {
           position={position}
           rotation={rotation}
           scale={scale}
+          onClick={onSymbolClick}
+          type={type}
         />
       ))}
     </div>
@@ -180,14 +304,23 @@ function Card({ card, type }) {
 // src/components/common/PlayArea.jsx
 function PlayArea() {
   const { pileCard, player } = useGameContext();
+  const { checkMatch } = useCardMatching();
+
+  const handleSymbolClick = (symbol) => {
+    checkMatch(symbol);
+  };
 
   return (
     <div className="flex-1 flex flex-col">
       <div className="flex-1 max-h-full flex items-center justify-center">
-        <Card card={pileCard} type="pile" />
+        <Card card={pileCard} type="pile" onSymbolClick={() => {}} />
       </div>
       <div className="flex-1 max-h-full flex items-center justify-center">
-        <Card card={player.currentCard} type="player" />
+        <Card
+          card={player.currentCard}
+          type="player"
+          onSymbolClick={handleSymbolClick}
+        />
       </div>
     </div>
   );
@@ -222,9 +355,9 @@ function DifficultySelect() {
   };
 
   const handleStartGame = () => {
-    //Setup game and start timer
-    //TODO: start timer hook
+    //Setup game
     initializeGame();
+
     navigate('/play');
   };
 
@@ -269,7 +402,10 @@ function DifficultySelect() {
 }
 
 function GamePlay() {
-  const { resetGame, gameStatus } = useGameContext();
+  const { resetGame, gameStatus, player, gameMode, timer } = useGameContext();
+
+  //start timer hook
+  useTimerEffect();
 
   useEffect(() => {
     return () => {
@@ -277,15 +413,22 @@ function GamePlay() {
     };
   }, []);
 
-  return (
+  return gameStatus === 'playing' ? (
     <div className="relative flex flex-col" style={{ height: '100dvh' }}>
-      {/* Play Area (Common to all modes) */}
-      {gameStatus === 'playing' ? (
-        <PlayArea />
-      ) : (
-        <div className="">Loading...</div>
+      {gameMode === 'timed' && (
+        <div className="absolute top-4 left-4">
+          <h1>Time Remaining: {timer.remaining}</h1>
+        </div>
       )}
+
+      {/* Play Area (Common to all modes) */}
+      <PlayArea />
+      <div>
+        <h1>Cards Remaining: {player.cardsRemaining}</h1>
+      </div>
     </div>
+  ) : (
+    <div>Loading...</div>
   );
 }
 
