@@ -99,7 +99,6 @@ async function initializeGame(mode, difficulty) {
               enabled: true,
               duration: DIFFICULTY_CONFIGS[difficulty].timerSeconds,
               remaining: DIFFICULTY_CONFIGS[difficulty].timerSeconds,
-              type: 'countdown',
             }
           : { enabled: false },
     };
@@ -107,7 +106,7 @@ async function initializeGame(mode, difficulty) {
 }
 
 function handleMatchFound(state) {
-  if (state.gameMode === 'practice') {
+  if (state.gameMode === 'practice' || state.gameMode === 'timed') {
     const newDeck = [...state.player.deck];
     newDeck.shift(); //Remove the matched card
 
@@ -121,6 +120,12 @@ function handleMatchFound(state) {
         cardsRemaining: newDeck.length,
         score: state.player.score + 1,
       },
+      timer: state.timer.enabled
+        ? {
+            ...state.timer,
+            remaining: state.timer.duration, // Reset timer
+          }
+        : state.timer,
       gameStatus: newDeck.length === 0 ? 'game_over' : 'playing',
     };
   }
@@ -128,13 +133,27 @@ function handleMatchFound(state) {
 }
 
 function handleTimerExpired(state) {
-  return {
-    ...state,
-    timer: {
-      ...state.timer,
-      remaining: state.timer.duration, //reset timer
-    },
-  };
+  if (state.gameMode === 'timed') {
+    const newDeck = [...state.player.deck];
+    newDeck.shift(); //Remove the next card without scoring
+
+    return {
+      ...state,
+      pileCard: state.player.currentCard,
+      player: {
+        ...state.player,
+        deck: newDeck,
+        currentCard: newDeck.length > 0 ? newDeck[0] : null,
+        cardsRemaining: newDeck.length,
+      },
+      timer: {
+        ...state.timer,
+        remaining: state.timer.duration, //reset timer
+      },
+      gameStatus: newDeck.length === 0 ? 'game_over' : 'playing',
+    };
+  }
+  return state;
 }
 
 export function GameProvider({ children }) {
@@ -257,6 +276,7 @@ function useCardMatching() {
   return { checkMatch };
 }
 
+// src/hooks/useTimerEffect.js
 function useTimerEffect() {
   const { timer, updateTimer, timerExpired } = useGameContext();
   const timerRef = useRef(null);
@@ -272,7 +292,7 @@ function useTimerEffect() {
       clearInterval(timerRef.current);
       timerExpired();
     }
-  }, [timer.enabled, timer.remaining, timerExpired, updateTimer]);
+  }, [timer.enabled, timer.remaining]);
 }
 
 // src/components/common/Card.jsx
@@ -418,6 +438,7 @@ function GamePlay() {
       {gameMode === 'timed' && (
         <div className="absolute top-4 left-4">
           <h1>Time Remaining: {timer.remaining}</h1>
+          <h2>Score: {player.score}</h2>
         </div>
       )}
 
