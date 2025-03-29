@@ -6,6 +6,10 @@ import {
   Route,
   useNavigate,
 } from 'react-router-dom';
+import { getBaseLayout } from './utils/layoutEngine';
+import { getSymbolRotation, getSymbolScale } from './utils/visualEngine';
+import Symbol from './components/gameplay/Symbol';
+import { DIFFICULTY_CONFIGS } from './constants/gameConstants';
 
 // src/context/GameContext.jsx
 const GameContext = createContext();
@@ -122,16 +126,71 @@ const getDeckBySettings = async (theme, symbolsPerCard) => {
 
 //src/utils/gameUtils.js
 export async function loadDeck(difficulty) {
-  switch (difficulty) {
-    case 'easy':
-      return await getDeckBySettings('classic', 3);
-    case 'medium':
-      return await getDeckBySettings('classic', 5);
-    case 'hard':
-      return await getDeckBySettings('classic', 8);
-    default:
-      return null;
-  }
+  const { symbolsPerCard } = DIFFICULTY_CONFIGS[difficulty];
+  const positions = getBaseLayout(symbolsPerCard).positions;
+  const baseRotation = getSymbolRotation(difficulty);
+
+  const rawDeck = await (async () => {
+    switch (difficulty) {
+      case 'easy':
+        return await getDeckBySettings('classic', symbolsPerCard);
+      case 'medium':
+        return await getDeckBySettings('classic', symbolsPerCard);
+      case 'hard':
+        return await getDeckBySettings('classic', symbolsPerCard);
+      default:
+        return null;
+    }
+  })();
+
+  // Transform each card to include pre-calculated layout values
+  return rawDeck.map((card) =>
+    card.map((symbol, index) => ({
+      symbol,
+      position: positions[index],
+      rotation: baseRotation,
+      scale: getSymbolScale(difficulty, index),
+    })),
+  );
+}
+
+// src/components/common/Card.jsx
+function Card({ card, type }) {
+  return (
+    <div
+      className={`relative h-[80%] sm:h-[90%] aspect-square rounded-full bg-bg-secondary dark:bg-bg-dark-primary border ${
+        type === 'pile'
+          ? 'border-neutral-200'
+          : 'border-green-400 dark:shadow-md dark:shadow-gray-500 shadow-md backdrop-blur-3xl'
+      }`}
+    >
+      {card.map(({ symbol, position, rotation, scale }, index) => (
+        <Symbol
+          key={`${symbol}-${index}`}
+          symbol={symbol}
+          position={position}
+          rotation={rotation}
+          scale={scale}
+        />
+      ))}
+    </div>
+  );
+}
+
+// src/components/common/PlayArea.jsx
+function PlayArea() {
+  const { pileCard, player } = useGameContext();
+
+  return (
+    <div className="flex-1 flex flex-col">
+      <div className="flex-1 max-h-full flex items-center justify-center">
+        <Card card={pileCard} type="pile" />
+      </div>
+      <div className="flex-1 max-h-full flex items-center justify-center">
+        <Card card={player.currentCard} type="player" />
+      </div>
+    </div>
+  );
 }
 
 // src/pages/MainMenu.jsx
@@ -210,7 +269,7 @@ function DifficultySelect() {
 }
 
 function GamePlay() {
-  const { gameMode, difficulty, resetGame } = useGameContext();
+  const { resetGame, gameStatus } = useGameContext();
 
   useEffect(() => {
     return () => {
@@ -219,10 +278,13 @@ function GamePlay() {
   }, []);
 
   return (
-    <div className="h-screen flex flex-col items-center justify-center gap-8">
-      <h2>Game Mode: {gameMode}</h2>
-      <h2>Difficulty: {difficulty}</h2>
-      <h1>Game Play</h1>
+    <div className="relative flex flex-col" style={{ height: '100dvh' }}>
+      {/* Play Area (Common to all modes) */}
+      {gameStatus === 'playing' ? (
+        <PlayArea />
+      ) : (
+        <div className="">Loading...</div>
+      )}
     </div>
   );
 }
