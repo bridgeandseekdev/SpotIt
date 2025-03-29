@@ -103,6 +103,37 @@ async function initializeGame(mode, difficulty) {
           : { enabled: false },
     };
   }
+
+  if (mode === 'bot' || mode === '2Player') {
+    const midpoint = Math.floor(fullDeck.length / 2);
+    const playerDeck = fullDeck.slice(0, midpoint);
+    const opponentDeck = fullDeck.slice(midpoint);
+
+    return {
+      ...commonState,
+      player: {
+        deck: playerDeck,
+        score: 0,
+        currentCard: playerDeck[0],
+        cardsRemaining: playerDeck.length,
+      },
+      opponent: {
+        deck: opponentDeck,
+        score: 0,
+        currentCard: opponentDeck[0],
+        cardsRemaining: opponentDeck.length,
+      },
+      timer:
+        mode === 'bot'
+          ? {
+              enabled: true,
+              duration: getRandomBotTime(difficulty),
+              remaining: getRandomBotTime(difficulty),
+            }
+          : { enabled: false },
+    };
+  }
+  return commonState;
 }
 
 function handleMatchFound(state) {
@@ -128,6 +159,30 @@ function handleMatchFound(state) {
         : state.timer,
       gameStatus: newDeck.length === 0 ? 'game_over' : 'playing',
     };
+  } else if (state.gameMode === 'bot') {
+    const newPlayerDeck = [...state.player.deck];
+    newPlayerDeck.shift();
+
+    return {
+      ...state,
+      pileCard: state.player.currentCard,
+      player: {
+        ...state.player,
+        deck: newPlayerDeck,
+        currentCard: newPlayerDeck.length > 0 ? newPlayerDeck[0] : null,
+        cardsRemaining: newPlayerDeck.length,
+        score: state.player.score + 1,
+      },
+      timer: {
+        ...state.timer,
+        remaining: getRandomBotTime(state.difficulty), // New random time
+      },
+      gameStatus:
+        newPlayerDeck.length === 0 ||
+        (state.opponent && state.opponent.deck.length === 0)
+          ? 'game_over'
+          : 'playing',
+    };
   }
   return state;
 }
@@ -151,6 +206,30 @@ function handleTimerExpired(state) {
         remaining: state.timer.duration, //reset timer
       },
       gameStatus: newDeck.length === 0 ? 'game_over' : 'playing',
+    };
+  } else if (state.gameMode === 'bot') {
+    //Bot wins this round
+    const newOpponentDeck = [...state.opponent.deck];
+    newOpponentDeck.shift();
+
+    return {
+      ...state,
+      pileCard: state.opponent.currentCard,
+      opponent: {
+        ...state.opponent,
+        deck: newOpponentDeck,
+        currentCard: newOpponentDeck.length > 0 ? newOpponentDeck[0] : null,
+        cardsRemaining: newOpponentDeck.length,
+        score: state.opponent.score + 1,
+      },
+      timer: {
+        ...state.timer,
+        remaining: getRandomBotTime(state.difficulty), // New random time
+      },
+      gameStatus:
+        newOpponentDeck.length === 0 || state.player.deck.length === 0
+          ? 'game_over'
+          : 'playing',
     };
   }
   return state;
@@ -241,6 +320,17 @@ export async function loadDeck(difficulty) {
       })),
     ),
   );
+}
+
+function getRandomBotTime(difficulty) {
+  const ranges = {
+    easy: { min: 5, max: 10 },
+    medium: { min: 10, max: 15 },
+    hard: { min: 15, max: 20 },
+  };
+
+  const { min, max } = ranges[difficulty];
+  return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
 function findMatchingSymbol(card1, card2) {
@@ -346,6 +436,25 @@ function PlayArea() {
   );
 }
 
+// src/components/mode-specific/ScoreBoard.jsx
+function ScoreBoard({ playerScore, botScore = null }) {
+  return (
+    <div className="flex justify-center space-x-8 mt-4 mb-4">
+      <div className="text-center">
+        <h3 className="font-semibold">Your Score</h3>
+        <div className="text-2xl font-bold">{playerScore}</div>
+      </div>
+
+      {botScore !== null && (
+        <div className="text-center">
+          <h3 className="font-semibold">Bot Score</h3>
+          <div className="text-2xl font-bold">{botScore}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // src/pages/MainMenu.jsx
 function MainMenu() {
   const navigate = useNavigate();
@@ -422,7 +531,8 @@ function DifficultySelect() {
 }
 
 function GamePlay() {
-  const { resetGame, gameStatus, player, gameMode, timer } = useGameContext();
+  const { resetGame, gameStatus, player, opponent, gameMode, timer } =
+    useGameContext();
 
   //start timer hook
   useTimerEffect();
@@ -435,10 +545,18 @@ function GamePlay() {
 
   return gameStatus === 'playing' ? (
     <div className="relative flex flex-col" style={{ height: '100dvh' }}>
+      {gameMode === 'bot' && opponent && (
+        <div className="absolute top-4 left-4">
+          <h2>Opponent Cards Remaining: {opponent.cardsRemaining}</h2>
+          <ScoreBoard playerScore={player.score} botScore={opponent.score} />
+          <h2>Time Remaining: {timer.remaining}</h2>
+        </div>
+      )}
+
       {gameMode === 'timed' && (
         <div className="absolute top-4 left-4">
           <h1>Time Remaining: {timer.remaining}</h1>
-          <h2>Score: {player.score}</h2>
+          <ScoreBoard playerScore={player.score} />
         </div>
       )}
 
