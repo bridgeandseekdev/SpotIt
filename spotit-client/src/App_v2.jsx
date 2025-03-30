@@ -331,8 +331,8 @@ export async function loadDeck(difficulty) {
 function getRandomBotTime(difficulty) {
   const ranges = {
     easy: { min: 5, max: 10 },
-    medium: { min: 10, max: 15 },
-    hard: { min: 15, max: 20 },
+    medium: { min: 3, max: 8 },
+    hard: { min: 3, max: 5 },
   };
 
   const { min, max } = ranges[difficulty];
@@ -543,7 +543,7 @@ function DifficultySelect() {
 
 function GameResult() {
   const navigate = useNavigate();
-  const { gameMode, player, opponent, initializeGame, resetGame } =
+  const { gameMode, player, opponent, initializeGame, resetGame, difficulty } =
     useGameContext();
 
   const handlePlayAgain = () => {
@@ -554,6 +554,9 @@ function GameResult() {
     resetGame();
     navigate('/');
   };
+
+  const n = DIFFICULTY_CONFIGS[difficulty].symbolsPerCard - 1;
+  const totalCards = Math.pow(n, 2) + n;
 
   return (
     <div className="flex flex-col items-center justify-center h-screen gap-8">
@@ -567,7 +570,9 @@ function GameResult() {
             : "It's a Tie!"}
         </h2>
       ) : (
-        <h2>Final Score: {player.score}</h2>
+        <h2>
+          Final Score: {player.score} / {totalCards}{' '}
+        </h2>
       )}
       <div className="flex gap-4">
         <button onClick={handlePlayAgain}>Play Again</button>
@@ -627,7 +632,12 @@ function GamePlay() {
     case 'game_over':
       return <GameResult />;
     default:
-      return <div>Dont know what to display</div>;
+      return (
+        <div className="flex items-center justify-center h-screen">
+          <h2>Some error occured</h2>
+          <button onClick={() => navigate('/')}>Go to Menu</button>
+        </div>
+      );
   }
 }
 

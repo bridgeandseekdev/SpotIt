@@ -40,19 +40,19 @@ export const DIFFICULTY_CONFIGS = {
     symbolsPerCard: '3',
     scale: 'MEDIUM',
     rotation: false,
-    timerSeconds: 3,
+    timerSeconds: 10,
   },
   medium: {
     symbolsPerCard: '5',
     scalePattern: ['LARGE', 'MEDIUM', 'LARGE', 'SMALL', 'MEDIUM'],
     rotation: false,
-    timerSeconds: 5,
+    timerSeconds: 6,
   },
   hard: {
     symbolsPerCard: '8',
     randomScale: true,
     rotation: true,
     maxRotation: 45,
-    timerSeconds: 5,
+    timerSeconds: 4,
   },
 };
