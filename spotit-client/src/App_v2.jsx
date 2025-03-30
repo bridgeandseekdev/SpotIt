@@ -73,6 +73,12 @@ function gameReducer(state, action) {
 }
 
 async function initializeGame(mode, difficulty) {
+  console.log(
+    'Initializing game with mode:',
+    mode,
+    'and difficulty:',
+    difficulty,
+  );
   const fullDeck = await loadDeck(difficulty);
   const pileCard = fullDeck.pop();
 
@@ -476,7 +482,7 @@ function MainMenu() {
 
 function DifficultySelect() {
   const navigate = useNavigate();
-  const { setDifficulty, gameMode, initializeGame, difficulty } =
+  const { setDifficulty, gameMode, initializeGame, difficulty, gameStatus } =
     useGameContext();
 
   const handleDifficultySelection = (difficulty) => {
@@ -484,10 +490,7 @@ function DifficultySelect() {
   };
 
   const handleStartGame = () => {
-    //Setup game
     initializeGame();
-
-    navigate('/play');
   };
 
   useEffect(() => {
@@ -495,6 +498,13 @@ function DifficultySelect() {
       navigate('/');
     }
   }, [gameMode, navigate]);
+
+  // Start game only after status changes from 'idle'
+  useEffect(() => {
+    if (gameStatus === 'initializing' || gameStatus === 'playing') {
+      navigate('/play');
+    }
+  }, [gameStatus, navigate]);
 
   return (
     <div className=" h-screen flex flex-col items-center justify-center gap-8">
@@ -530,45 +540,86 @@ function DifficultySelect() {
   );
 }
 
-function GamePlay() {
-  const { resetGame, gameStatus, player, opponent, gameMode, timer } =
+function GameResult() {
+  const navigate = useNavigate();
+  const { gameMode, player, opponent, initializeGame, resetGame } =
     useGameContext();
 
-  //start timer hook
-  useTimerEffect();
+  const handlePlayAgain = () => {
+    initializeGame();
+  };
 
-  useEffect(() => {
-    return () => {
-      resetGame();
-    };
-  }, []);
+  const handleBackToMenu = () => {
+    resetGame();
+    navigate('/');
+  };
 
-  return gameStatus === 'playing' ? (
-    <div className="relative flex flex-col" style={{ height: '100dvh' }}>
-      {gameMode === 'bot' && opponent && (
-        <div className="absolute top-4 left-4">
-          <h2>Opponent Cards Remaining: {opponent.cardsRemaining}</h2>
-          <ScoreBoard playerScore={player.score} botScore={opponent.score} />
-          <h2>Time Remaining: {timer.remaining}</h2>
-        </div>
+  return (
+    <div className="flex flex-col items-center justify-center h-screen gap-8">
+      <h1 className="text-2xl font-bold">Game Over!</h1>
+      {gameMode === 'bot' ? (
+        <h2>
+          {player.score > opponent.score
+            ? 'You Win!'
+            : player.score < opponent.score
+            ? 'Bot Wins!'
+            : "It's a Tie!"}
+        </h2>
+      ) : (
+        <h2>Final Score: {player.score}</h2>
       )}
-
-      {gameMode === 'timed' && (
-        <div className="absolute top-4 left-4">
-          <h1>Time Remaining: {timer.remaining}</h1>
-          <ScoreBoard playerScore={player.score} />
-        </div>
-      )}
-
-      {/* Play Area (Common to all modes) */}
-      <PlayArea />
-      <div>
-        <h1>Cards Remaining: {player.cardsRemaining}</h1>
+      <div className="flex gap-4">
+        <button onClick={handlePlayAgain}>Play Again</button>
+        <button onClick={handleBackToMenu}>Back to Menu</button>
       </div>
     </div>
-  ) : (
-    <div>Loading...</div>
   );
+}
+
+function GamePlay() {
+  const { gameStatus, player, opponent, gameMode, timer } = useGameContext();
+
+  useTimerEffect();
+
+  switch (gameStatus) {
+    case 'initializing':
+      return (
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-xl">Loading...</div>
+        </div>
+      );
+    case 'playing':
+      return (
+        <div className="relative flex flex-col" style={{ height: '100dvh' }}>
+          {gameMode === 'bot' && opponent && (
+            <div className="absolute top-4 left-4">
+              <h2>Opponent Cards Remaining: {opponent.cardsRemaining}</h2>
+              <ScoreBoard
+                playerScore={player.score}
+                botScore={opponent.score}
+              />
+              <h2>Time Remaining: {timer.remaining}</h2>
+            </div>
+          )}
+
+          {gameMode === 'timed' && (
+            <div className="absolute top-4 left-4">
+              <h1>Time Remaining: {timer.remaining}</h1>
+              <ScoreBoard playerScore={player.score} />
+            </div>
+          )}
+
+          <PlayArea />
+          <div>
+            <h1>Cards Remaining: {player.cardsRemaining}</h1>
+          </div>
+        </div>
+      );
+    case 'game_over':
+      return <GameResult />;
+    default:
+      return <div>Dont know what to display</div>;
+  }
 }
 
 function App_v2() {
