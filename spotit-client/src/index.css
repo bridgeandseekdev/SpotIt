@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+.dark .noise-svg::before {
+  content: none;
+}
+
 .noise-svg {
   position: relative;
   overflow: hidden;
