@@ -2,6 +2,190 @@
 @tailwind components;
 @tailwind utilities;
 
+.noise-svg {
+  position: relative;
+  overflow: hidden;
+}
+
+.noise-svg::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.4;
+  filter: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E#noiseFilter");
+}
+
+.noise-radial {
+  position: relative;
+  overflow: hidden;
+}
+
+.noise-radial::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.4;
+  background-image: repeating-radial-gradient(
+    circle at 20% 20%, 
+    rgba(255, 255, 255, 0.3) 0%, 
+    transparent 1%, 
+    rgba(0, 0, 0, 0.3) 2%
+  );
+  background-size: 10px 10px;
+}
+
+.noise-conic {
+  position: relative;
+  overflow: hidden;
+}
+
+.noise-conic::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.4;
+  background-image: repeating-conic-gradient(
+    rgba(0, 0, 0, 0.2) 0%, 
+    transparent 0.5%, 
+    rgba(255, 255, 255, 0.2) 1%, 
+    transparent 1.5%
+  );
+}
+
+.noise-composite {
+  position: relative;
+  overflow: hidden;
+}
+
+.noise-composite::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.5;
+  background-image: 
+    linear-gradient(135deg, transparent 0%, transparent 40%, rgba(255, 255, 255, 0.2) 40%, rgba(255, 255, 255, 0.2) 60%, transparent 60%, transparent 100%),
+    linear-gradient(45deg, transparent 0%, transparent 40%, rgba(0, 0, 0, 0.2) 40%, rgba(0, 0, 0, 0.2) 60%, transparent 60%, transparent 100%);
+  background-size: 8px 8px;
+}
+
+.linen-horizontal {
+  position: relative;
+  overflow: hidden;
+}
+
+.linen-horizontal::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(0, 0, 0, 0.2) 3px,
+      rgba(0, 0, 0, 0.2) 4px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 6px,
+      rgba(0, 0, 0, 0.12) 3px,
+      rgba(0, 0, 0, 0.12) 4px
+    );
+  opacity: 0.9;
+}
+
+.linen-canvas {
+  background-color: #f8f8f2;
+  color: #333;
+  position: relative;
+}
+
+.linen-canvas::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    repeating-linear-gradient(
+      45deg,
+      rgba(0, 0, 0, 0.15),
+      rgba(0, 0, 0, 0.15) 2px,
+      transparent 2px,
+      transparent 8px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(0, 0, 0, 0.15),
+      rgba(0, 0, 0, 0.15) 2px,
+      transparent 2px,
+      transparent 8px
+    );
+  background-size: 10px 10px;
+  opacity: 1;
+}
+
+/* Card 8: Linen Texture - Embossed */
+.linen-embossed {
+  background-color: #f2f2ec;
+  color: #333;
+  position: relative;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.3), inset 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.linen-embossed::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 3px,
+      rgba(255, 255, 255, 0.6) 3px,
+      rgba(255, 255, 255, 0.6) 6px
+    );
+  opacity: 0.7;
+}
+
+.linen-embossed::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 3px,
+      rgba(0, 0, 0, 0.25) 3px,
+      rgba(0, 0, 0, 0.25) 6px
+    );
+  opacity: 0.7;
+}
+
 /* 
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;

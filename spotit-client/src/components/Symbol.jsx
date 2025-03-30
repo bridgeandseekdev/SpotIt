@@ -1,5 +1,5 @@
-import { ICON_MAP } from '../../assets/icons';
-import { getSymbolStyles } from '../../utils/visualEngine';
+import { ICON_MAP } from '../assets/icons';
+import { getSymbolStyles } from '../utils/visualEngine';
 
 const SymbolIcon = ({ symbol, className }) => {
   const IconComponent = ICON_MAP[symbol];
