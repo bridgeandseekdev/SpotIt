@@ -464,12 +464,19 @@ function ScoreBoard({ playerScore, botScore = null }) {
 // src/pages/MainMenu.jsx
 function MainMenu() {
   const navigate = useNavigate();
-  const { setGameMode } = useGameContext();
+  const { setGameMode, gameStatus, resetGame } = useGameContext();
   const handleModeSelection = (mode) => {
     //reset game
     setGameMode(mode);
     navigate('/difficulty');
   };
+
+  useEffect(() => {
+    if (gameStatus !== 'idle') {
+      resetGame();
+    }
+  }, [gameStatus, resetGame]);
+
   return (
     <div className="flex flex-col items-center justify-center h-screen gap-8">
       <button onClick={() => handleModeSelection('practice')}>Practice</button>
@@ -482,7 +489,7 @@ function MainMenu() {
 
 function DifficultySelect() {
   const navigate = useNavigate();
-  const { setDifficulty, gameMode, initializeGame, difficulty, gameStatus } =
+  const { setDifficulty, gameMode, initializeGame, difficulty } =
     useGameContext();
 
   const handleDifficultySelection = (difficulty) => {
@@ -491,6 +498,7 @@ function DifficultySelect() {
 
   const handleStartGame = () => {
     initializeGame();
+    navigate('/play');
   };
 
   useEffect(() => {
@@ -498,13 +506,6 @@ function DifficultySelect() {
       navigate('/');
     }
   }, [gameMode, navigate]);
-
-  // Start game only after status changes from 'idle'
-  useEffect(() => {
-    if (gameStatus === 'initializing' || gameStatus === 'playing') {
-      navigate('/play');
-    }
-  }, [gameStatus, navigate]);
 
   return (
     <div className=" h-screen flex flex-col items-center justify-center gap-8">
@@ -578,10 +579,18 @@ function GameResult() {
 
 function GamePlay() {
   const { gameStatus, player, opponent, gameMode, timer } = useGameContext();
+  const navigate = useNavigate();
 
   useTimerEffect();
 
+  useEffect(() => {
+    if (!gameMode) {
+      navigate('/');
+    }
+  }, [gameMode, navigate]);
+
   switch (gameStatus) {
+    case 'idle':
     case 'initializing':
       return (
         <div className="flex items-center justify-center h-screen">
