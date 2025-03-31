@@ -25,19 +25,21 @@ const GameContext = createContext();
 const initialState = {
   gameMode: null,
   difficulty: null,
-  gameStatus: 'idle',
-  pileCard: null,
-  player: {
-    deck: [],
-    score: 0,
-    currentCard: null,
-    cardsRemaining: 0,
-  },
-  opponent: null,
-  timer: {
-    enabled: false,
-    duration: 0,
-    remaining: 0,
+  offline: {
+    gameStatus: 'idle',
+    pileCard: null,
+    player: {
+      deck: [],
+      score: 0,
+      currentCard: null,
+      cardsRemaining: 0,
+    },
+    opponent: null,
+    timer: {
+      enabled: false,
+      duration: 0,
+      remaining: 0,
+    },
   },
 };
 
@@ -48,19 +50,32 @@ function gameReducer(state, action) {
     case 'SET_DIFFICULTY':
       return { ...state, difficulty: action.payload };
     case 'INITIALIZE_GAME_START':
-      return { ...state, gameStatus: 'initializing' };
+      return {
+        ...state,
+        offline: { ...state.offline, gameStatus: 'initializing' },
+      };
     case 'INITIALIZE_GAME_SUCCESS':
       return { ...state, ...action.payload };
     case 'INITIALIZE_GAME_ERROR':
-      return { ...state, gameStatus: 'error', error: action.payload };
+      return {
+        ...state,
+        offline: {
+          ...state.offline,
+          gameStatus: 'error',
+          error: action.payload,
+        },
+      };
     case 'MATCH_FOUND':
       return handleMatchFound(state, action.payload);
     case 'UPDATE_TIMER':
       return {
         ...state,
-        timer: {
-          ...state.timer,
-          remaining: action.payload,
+        offline: {
+          ...state.offline,
+          timer: {
+            ...state.offline.timer,
+            remaining: action.payload,
+          },
         },
       };
     case 'TIMER_EXPIRED':
@@ -73,70 +88,72 @@ function gameReducer(state, action) {
 }
 
 async function initializeGame(mode, difficulty) {
-  console.log(
-    'Initializing game with mode:',
-    mode,
-    'and difficulty:',
-    difficulty,
-  );
   const fullDeck = await loadDeck(difficulty);
   const pileCard = fullDeck.pop();
 
   const commonState = {
     gameMode: mode,
     difficulty,
-    gameStatus: 'playing',
-    pileCard,
+    offline: {
+      gameStatus: 'playing',
+      pileCard,
+    },
   };
 
   if (mode === 'practice' || mode === 'timed') {
     return {
       ...commonState,
-      player: {
-        deck: fullDeck,
-        score: 0,
-        currentCard: fullDeck[0],
-        cardsRemaining: fullDeck.length,
+      offline: {
+        ...commonState.offline,
+        player: {
+          deck: fullDeck,
+          score: 0,
+          currentCard: fullDeck[0],
+          cardsRemaining: fullDeck.length,
+        },
+        opponent: null,
+        timer:
+          mode === 'timed'
+            ? {
+                enabled: true,
+                duration: DIFFICULTY_CONFIGS[difficulty].timerSeconds,
+                remaining: DIFFICULTY_CONFIGS[difficulty].timerSeconds,
+              }
+            : { enabled: false },
       },
-      opponent: null,
-      timer:
-        mode === 'timed'
-          ? {
-              enabled: true,
-              duration: DIFFICULTY_CONFIGS[difficulty].timerSeconds,
-              remaining: DIFFICULTY_CONFIGS[difficulty].timerSeconds,
-            }
-          : { enabled: false },
     };
   }
 
-  if (mode === 'bot' || mode === '2Player') {
+  if (mode === 'bot') {
     const midpoint = Math.floor(fullDeck.length / 2);
     const playerDeck = fullDeck.slice(0, midpoint);
     const opponentDeck = fullDeck.slice(midpoint);
 
     return {
       ...commonState,
-      player: {
-        deck: playerDeck,
-        score: 0,
-        currentCard: playerDeck[0],
-        cardsRemaining: playerDeck.length,
+      offline: {
+        ...commonState.offline,
+        player: {
+          deck: playerDeck,
+          score: 0,
+          currentCard: playerDeck[0],
+          cardsRemaining: playerDeck.length,
+        },
+        opponent: {
+          deck: opponentDeck,
+          score: 0,
+          currentCard: opponentDeck[0],
+          cardsRemaining: opponentDeck.length,
+        },
+        timer:
+          mode === 'bot'
+            ? {
+                enabled: true,
+                duration: getRandomBotTime(difficulty),
+                remaining: getRandomBotTime(difficulty),
+              }
+            : { enabled: false },
       },
-      opponent: {
-        deck: opponentDeck,
-        score: 0,
-        currentCard: opponentDeck[0],
-        cardsRemaining: opponentDeck.length,
-      },
-      timer:
-        mode === 'bot'
-          ? {
-              enabled: true,
-              duration: getRandomBotTime(difficulty),
-              remaining: getRandomBotTime(difficulty),
-            }
-          : { enabled: false },
     };
   }
   return commonState;
@@ -144,50 +161,56 @@ async function initializeGame(mode, difficulty) {
 
 function handleMatchFound(state) {
   if (state.gameMode === 'practice' || state.gameMode === 'timed') {
-    const newDeck = [...state.player.deck];
+    const newDeck = [...state.offline.player.deck];
     newDeck.shift(); //Remove the matched card
 
     return {
       ...state,
-      pileCard: state.player.currentCard,
-      player: {
-        ...state.player,
-        deck: newDeck,
-        currentCard: newDeck.length > 0 ? newDeck[0] : null,
-        cardsRemaining: newDeck.length,
-        score: state.player.score + 1,
+      offline: {
+        ...state.offline,
+        pileCard: state.offline.player.currentCard,
+        player: {
+          ...state.offline.player,
+          deck: newDeck,
+          currentCard: newDeck.length > 0 ? newDeck[0] : null,
+          cardsRemaining: newDeck.length,
+          score: state.offline.player.score + 1,
+        },
+        timer: state.offline.timer.enabled
+          ? {
+              ...state.offline.timer,
+              remaining: state.offline.timer.duration, // Reset timer
+            }
+          : state.offline.timer,
+        gameStatus: newDeck.length === 0 ? 'game_over' : 'playing',
       },
-      timer: state.timer.enabled
-        ? {
-            ...state.timer,
-            remaining: state.timer.duration, // Reset timer
-          }
-        : state.timer,
-      gameStatus: newDeck.length === 0 ? 'game_over' : 'playing',
     };
   } else if (state.gameMode === 'bot') {
-    const newPlayerDeck = [...state.player.deck];
+    const newPlayerDeck = [...state.offline.player.deck];
     newPlayerDeck.shift();
 
     return {
       ...state,
-      pileCard: state.player.currentCard,
-      player: {
-        ...state.player,
-        deck: newPlayerDeck,
-        currentCard: newPlayerDeck.length > 0 ? newPlayerDeck[0] : null,
-        cardsRemaining: newPlayerDeck.length,
-        score: state.player.score + 1,
+      offline: {
+        ...state.offline,
+        pileCard: state.offline.player.currentCard,
+        player: {
+          ...state.offline.player,
+          deck: newPlayerDeck,
+          currentCard: newPlayerDeck.length > 0 ? newPlayerDeck[0] : null,
+          cardsRemaining: newPlayerDeck.length,
+          score: state.offline.player.score + 1,
+        },
+        timer: {
+          ...state.offline.timer,
+          remaining: getRandomBotTime(state.difficulty), // New random time
+        },
+        gameStatus:
+          newPlayerDeck.length === 0 ||
+          (state.offline.opponent && state.offline.opponent.deck.length === 0)
+            ? 'game_over'
+            : 'playing',
       },
-      timer: {
-        ...state.timer,
-        remaining: getRandomBotTime(state.difficulty), // New random time
-      },
-      gameStatus:
-        newPlayerDeck.length === 0 ||
-        (state.opponent && state.opponent.deck.length === 0)
-          ? 'game_over'
-          : 'playing',
     };
   }
   return state;
@@ -195,47 +218,53 @@ function handleMatchFound(state) {
 
 function handleTimerExpired(state) {
   if (state.gameMode === 'timed') {
-    const newDeck = [...state.player.deck];
+    const newDeck = [...state.offline.player.deck];
     newDeck.shift(); //Remove the next card without scoring
 
     return {
       ...state,
-      pileCard: state.player.currentCard,
-      player: {
-        ...state.player,
-        deck: newDeck,
-        currentCard: newDeck.length > 0 ? newDeck[0] : null,
-        cardsRemaining: newDeck.length,
+      offline: {
+        ...state.offline,
+        pileCard: state.offline.player.currentCard,
+        player: {
+          ...state.offline.player,
+          deck: newDeck,
+          currentCard: newDeck.length > 0 ? newDeck[0] : null,
+          cardsRemaining: newDeck.length,
+        },
+        timer: {
+          ...state.offline.timer,
+          remaining: state.offline.timer.duration, //reset timer
+        },
+        gameStatus: newDeck.length === 0 ? 'game_over' : 'playing',
       },
-      timer: {
-        ...state.timer,
-        remaining: state.timer.duration, //reset timer
-      },
-      gameStatus: newDeck.length === 0 ? 'game_over' : 'playing',
     };
   } else if (state.gameMode === 'bot') {
     //Bot wins this round
-    const newOpponentDeck = [...state.opponent.deck];
+    const newOpponentDeck = [...state.offline.opponent.deck];
     newOpponentDeck.shift();
 
     return {
       ...state,
-      pileCard: state.opponent.currentCard,
-      opponent: {
-        ...state.opponent,
-        deck: newOpponentDeck,
-        currentCard: newOpponentDeck.length > 0 ? newOpponentDeck[0] : null,
-        cardsRemaining: newOpponentDeck.length,
-        score: state.opponent.score + 1,
+      offline: {
+        ...state.offline,
+        pileCard: state.offline.opponent.currentCard,
+        opponent: {
+          ...state.offline.opponent,
+          deck: newOpponentDeck,
+          currentCard: newOpponentDeck.length > 0 ? newOpponentDeck[0] : null,
+          cardsRemaining: newOpponentDeck.length,
+          score: state.offline.opponent.score + 1,
+        },
+        timer: {
+          ...state.offline.timer,
+          remaining: getRandomBotTime(state.difficulty), // New random time
+        },
+        gameStatus:
+          newOpponentDeck.length === 0 || state.offline.player.deck.length === 0
+            ? 'game_over'
+            : 'playing',
       },
-      timer: {
-        ...state.timer,
-        remaining: getRandomBotTime(state.difficulty), // New random time
-      },
-      gameStatus:
-        newOpponentDeck.length === 0 || state.player.deck.length === 0
-          ? 'game_over'
-          : 'playing',
     };
   }
   return state;
@@ -317,14 +346,15 @@ export async function loadDeck(difficulty) {
 
   // Transform each card to include pre-calculated layout values
   return shuffle(
-    rawDeck.map((card) =>
-      card.map((symbol, index) => ({
+    rawDeck.map((card) => {
+      const shuffledSymbols = shuffle([...card]);
+      return shuffledSymbols.map((symbol, index) => ({
         symbol,
         position: positions[index],
         rotation: getSymbolRotation(difficulty),
         scale: getSymbolScale(difficulty, index),
-      })),
-    ),
+      }));
+    }),
   );
 }
 
@@ -355,7 +385,10 @@ function findMatchingSymbol(card1, card2) {
 
 // src/hooks/useCardMatching.js
 function useCardMatching() {
-  const { player, pileCard, handleMatchFound } = useGameContext();
+  const {
+    offline: { player, pileCard },
+    handleMatchFound,
+  } = useGameContext();
   const checkMatch = useCallback(
     (clickedSymbol) => {
       if (!pileCard || !player.currentCard) return false;
@@ -374,7 +407,11 @@ function useCardMatching() {
 
 // src/hooks/useTimerEffect.js
 function useTimerEffect() {
-  const { timer, updateTimer, timerExpired } = useGameContext();
+  const {
+    offline: { timer },
+    updateTimer,
+    timerExpired,
+  } = useGameContext();
   const timerRef = useRef(null);
 
   useEffect(() => {
@@ -419,7 +456,9 @@ function Card({ card, type, onSymbolClick }) {
 
 // src/components/common/PlayArea.jsx
 function PlayArea() {
-  const { pileCard, player } = useGameContext();
+  const {
+    offline: { pileCard, player },
+  } = useGameContext();
   const { checkMatch } = useCardMatching();
 
   const handleSymbolClick = (symbol) => {
@@ -464,7 +503,11 @@ function ScoreBoard({ playerScore, botScore = null }) {
 // src/pages/MainMenu.jsx
 function MainMenu() {
   const navigate = useNavigate();
-  const { setGameMode, gameStatus, resetGame } = useGameContext();
+  const {
+    setGameMode,
+    offline: { gameStatus },
+    resetGame,
+  } = useGameContext();
   const handleModeSelection = (mode) => {
     //reset game
     setGameMode(mode);
@@ -501,11 +544,11 @@ function DifficultySelect() {
     navigate('/play');
   };
 
-  useEffect(() => {
-    if (!gameMode) {
-      navigate('/');
-    }
-  }, [gameMode, navigate]);
+  // useEffect(() => {
+  //   if (!gameMode) {
+  //     navigate('/');
+  //   }
+  // }, [gameMode, navigate]);
 
   return (
     <div className=" h-screen flex flex-col items-center justify-center gap-8">
@@ -543,8 +586,13 @@ function DifficultySelect() {
 
 function GameResult() {
   const navigate = useNavigate();
-  const { gameMode, player, opponent, initializeGame, resetGame, difficulty } =
-    useGameContext();
+  const {
+    gameMode,
+    offline: { player, opponent },
+    initializeGame,
+    resetGame,
+    difficulty,
+  } = useGameContext();
 
   const handlePlayAgain = () => {
     initializeGame();
@@ -583,7 +631,10 @@ function GameResult() {
 }
 
 function GamePlay() {
-  const { gameStatus, player, opponent, gameMode, timer } = useGameContext();
+  const {
+    gameMode,
+    offline: { gameStatus, player, opponent, timer },
+  } = useGameContext();
   const navigate = useNavigate();
 
   useTimerEffect();
