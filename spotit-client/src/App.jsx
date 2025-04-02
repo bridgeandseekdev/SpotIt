@@ -6,6 +6,7 @@ import {
   useEffect,
   useCallback,
   useRef,
+  useState,
 } from 'react';
 import {
   BrowserRouter as Router,
@@ -13,11 +14,106 @@ import {
   Route,
   useNavigate,
 } from 'react-router-dom';
+import { io } from 'socket.io-client';
 import { getBaseLayout } from './utils/layoutEngine';
 import { getSymbolRotation, getSymbolScale } from './utils/visualEngine';
 import Symbol from './components/Symbol';
 import { DIFFICULTY_CONFIGS } from './constants/gameConstants';
 import shuffle from 'lodash.shuffle';
+
+//src/context/SocketContext.jsx
+const SocketContext = createContext();
+
+export function SocketProvider({ children }) {
+  const [socket, setSocket] = useState(null);
+  const initialState = {
+    isConnected: false,
+    roomId: null,
+    hostId: null,
+    players: [],
+    myPlayerId: null,
+  };
+  const [onlineState, setOnlineState] = useState(initialState);
+
+  useEffect(() => {
+    const newSocket = io('http://localhost:3000');
+
+    newSocket.on('connect', () => {
+      setOnlineState((prev) => ({ ...prev, isConnected: true }));
+    });
+
+    newSocket.on('room_created', handleRoomCreated);
+
+    newSocket.on('room_joined', handleRoomJoined);
+    newSocket.on('player_joined', handlePlayerJoined);
+
+    setSocket(newSocket);
+
+    return () => {
+      newSocket.disconnect();
+    };
+  }, []);
+
+  const handleRoomCreated = ({ roomInfo: { hostId, players }, roomId }) => {
+    setOnlineState((prev) => ({
+      ...prev,
+      roomId,
+      hostId,
+      players,
+      myPlayerId: hostId,
+    }));
+  };
+
+  const handleRoomJoined = ({ roomId, player, hostId }) => {
+    setOnlineState((prev) => ({
+      ...prev,
+      roomId,
+      myPlayerId: player.id,
+      hostId,
+    }));
+  };
+
+  const handlePlayerJoined = ({ players }) => {
+    setOnlineState((prev) => ({
+      ...prev,
+      players,
+    }));
+  };
+
+  const createRoom = ({ username }) => {
+    socket.emit('create_room', { username });
+  };
+
+  const joinRoom = ({ roomId, username }) => {
+    socket.emit('join_room', { roomId, username });
+  };
+
+  const resetSocket = () => {
+    setSocket(null);
+    setOnlineState(initialState);
+  };
+
+  return (
+    <SocketContext.Provider
+      value={{
+        onlineState,
+        createRoom,
+        joinRoom,
+        resetSocket,
+      }}
+    >
+      {children}
+    </SocketContext.Provider>
+  );
+}
+
+export function useSocketContext() {
+  const context = useContext(SocketContext);
+  if (context === undefined) {
+    throw new Error('useSocket must be used within a SocketProvider');
+  }
+  return context;
+}
 
 // src/context/GameContext.jsx
 const GameContext = createContext();
@@ -508,9 +604,14 @@ function MainMenu() {
     offline: { gameStatus },
     resetGame,
   } = useGameContext();
+
   const handleModeSelection = (mode) => {
-    //reset game
+    resetGame();
     setGameMode(mode);
+    if (mode === 'online') {
+      navigate('/online/create');
+      return;
+    }
     navigate('/difficulty');
   };
 
@@ -525,7 +626,9 @@ function MainMenu() {
       <button onClick={() => handleModeSelection('practice')}>Practice</button>
       <button onClick={() => handleModeSelection('timed')}>Timed</button>
       <button onClick={() => handleModeSelection('bot')}>Play with bot</button>
-      <button>2 Player Mode(Coming Soon)</button>
+      <button onClick={() => handleModeSelection('online')}>
+        2 Player: Play with your friend online
+      </button>
     </div>
   );
 }
@@ -543,12 +646,6 @@ function DifficultySelect() {
     initializeGame();
     navigate('/play');
   };
-
-  // useEffect(() => {
-  //   if (!gameMode) {
-  //     navigate('/');
-  //   }
-  // }, [gameMode, navigate]);
 
   return (
     <div className=" h-screen flex flex-col items-center justify-center gap-8">
@@ -692,7 +789,106 @@ function GamePlay() {
   }
 }
 
-function App_v2() {
+function CreateRoom() {
+  const {
+    createRoom,
+    joinRoom,
+    onlineState: { roomId },
+  } = useSocketContext();
+  const navigate = useNavigate();
+
+  const [createName, setCreateName] = useState('');
+  const [joinCode, setJoinCode] = useState('');
+  const [joinName, setJoinName] = useState('');
+
+  const handleCreate = () => {
+    createRoom({ username: createName });
+  };
+
+  const handleJoin = () => {
+    joinRoom({ roomId: joinCode, username: joinName });
+  };
+
+  useEffect(() => {
+    if (roomId) navigate('/online');
+  }, [roomId, navigate]);
+
+  return (
+    <div className="flex flex-col justify-center items-center h-screen gap-36">
+      <div className="flex flex-col gap-4 items-center">
+        <h1>Create a private game room</h1>
+        <input
+          type="text"
+          value={createName}
+          onChange={(e) => setCreateName(e.target.value)}
+          placeholder="Enter your game name"
+        />
+        <button onClick={handleCreate}>Create Room</button>
+      </div>
+      <div className="flex flex-col gap-4 items-center">
+        <h2>Join room</h2>
+        <p>If you already have an invite code, join here</p>
+        <input
+          type="text"
+          value={joinCode}
+          onChange={(e) => setJoinCode(e.target.value)}
+          placeholder="Enter invite code"
+        />
+        <input
+          type="text"
+          value={joinName}
+          onChange={(e) => setJoinName(e.target.value)}
+          placeholder="Enter your game name"
+        />
+        <button onClick={handleJoin}>Join Room</button>
+      </div>
+    </div>
+  );
+}
+
+function RoomHome() {
+  const {
+    onlineState: { roomId, hostId, myPlayerId, players },
+  } = useSocketContext();
+  return (
+    <div className="flex h-screen flex-col justify-center items-center">
+      <h1 className="font-bold text-xl">Welcome! to lobby</h1>
+      {players.map(({ username, id }) => (
+        <p key={id}>
+          {myPlayerId === id ? 'You, ' : 'Your friend, '} {username} Joined{' '}
+          {hostId === id ? '[HOST]' : null}
+        </p>
+      ))}
+      {players.length === 1 && (
+        <div>
+          <p>Waiting for another player..</p>
+          <p>Share this code with your friend to join: {roomId}</p>
+        </div>
+      )}
+
+      {players.length === 2 && <button>Start Game</button>}
+    </div>
+  );
+}
+
+function OnlineGamePlay() {
+  // const socketState = useSocketContext();
+  <div>
+    <h1>You are playing online!!</h1>
+  </div>;
+}
+
+function OnlineRouter() {
+  return (
+    <Routes>
+      <Route path="/" element={<RoomHome />} />
+      <Route path="/create" element={<CreateRoom />} />
+      <Route path="/play" element={<OnlineGamePlay />} />
+    </Routes>
+  );
+}
+
+function App() {
   return (
     <GameProvider>
       <Router>
@@ -700,10 +896,18 @@ function App_v2() {
           <Route path="/" element={<MainMenu />} />
           <Route path="/difficulty" element={<DifficultySelect />} />
           <Route path="/play" element={<GamePlay />} />
+          <Route
+            path="/online/*"
+            element={
+              <SocketProvider>
+                <OnlineRouter />
+              </SocketProvider>
+            }
+          />
         </Routes>
       </Router>
     </GameProvider>
   );
 }
 
-export default App_v2;
+export default App;
