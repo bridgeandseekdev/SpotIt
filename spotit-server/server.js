@@ -72,7 +72,10 @@ io.on('connection', (socket) => {
   });
   //start game(initialized with the frontend generated deck)
   socket.on('initialize_game', ({ roomId, deck }) => {
+    console.log('initialization request');
+
     const room = rooms[roomId];
+
     if (!room) {
       return socket.emit('error', { message: 'Room not found' });
     }
@@ -81,9 +84,16 @@ io.on('connection', (socket) => {
       return socket.emit('error', { message: 'Room is no longer active' });
     }
 
-    if (room.players.length !== 2 || socket.id !== room.hostId) {
+    if (room.players.length !== 2) {
       return socket.emit('error', { message: 'Error: Cannot start the game' });
     }
+
+    if (room.gameInitialized) {
+      console.log('Room already initialized, ignoring duplicate request');
+      return;
+    }
+
+    room.gameInitialized = true;
 
     const pileCard = deck.pop();
     const midpoint = Math.floor(deck.length / 2);
@@ -122,6 +132,29 @@ io.on('connection', (socket) => {
       players: games[gameId].players,
       gameStatus: games[gameId].gameStatus,
     });
+  });
+
+  //
+  socket.on('start_countdown', ({ roomId, gameId }) => {
+    let countdown = 3; // 5 seconds countdown
+
+    // Broadcast initial countdown value
+    io.to(roomId).emit('countdown_update', countdown);
+
+    // Set up interval to count down
+    const intervalId = setInterval(() => {
+      countdown--;
+
+      // Broadcast updated countdown value
+      io.to(roomId).emit('countdown_update', countdown);
+
+      // When countdown reaches zero
+      if (countdown <= 0) {
+        clearInterval(intervalId); // Stop the interval
+        games[gameId].gameStatus = 'playing';
+        io.to(roomId).emit('game_started'); // Tell clients game is starting
+      }
+    }, 1000); // Run every second
   });
 
   //Handle disconnection

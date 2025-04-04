@@ -34,7 +34,12 @@ export function SocketProvider({ children }) {
   const [onlineState, setOnlineState] = useState(initialState);
   const onlineStateRef = useRef(initialState);
 
-  const { difficulty, handleOnlineGameInitialized } = useGameContext();
+  const {
+    difficulty,
+    handleOnlineGameInitialized,
+    handleOnlineGameStarted,
+    online: { gameId },
+  } = useGameContext();
 
   useEffect(() => {
     // Update ref whenever state changes
@@ -55,6 +60,7 @@ export function SocketProvider({ children }) {
     newSocket.on('game_initialized', (payload) =>
       handleOnlineGameInitialized(payload, onlineStateRef.current.myPlayerId),
     );
+    newSocket.on('game_started', handleOnlineGameStarted);
     newSocket.on('error', (err) => console.log(err));
 
     setSocket(newSocket);
@@ -103,6 +109,10 @@ export function SocketProvider({ children }) {
     socket.emit('initialize_game', { roomId: onlineState.roomId, deck });
   };
 
+  const startOnlineCountdown = () => {
+    socket.emit('start_countdown', { roomId: onlineState.roomId, gameId });
+  };
+
   const resetSocket = () => {
     setSocket(null);
     setOnlineState(initialState);
@@ -116,6 +126,7 @@ export function SocketProvider({ children }) {
         joinRoom,
         resetSocket,
         startGame,
+        startOnlineCountdown,
       }}
     >
       {children}
@@ -196,6 +207,15 @@ function gameReducer(state, action) {
 
     case 'ONLINE_GAME_INITIALIZED':
       return handleOnlineGameInitialized(state, action.payload);
+
+    case 'ONLINE_GAME_STARTED':
+      return {
+        ...state,
+        online: {
+          ...state.online,
+          gameStatus: 'playing',
+        },
+      };
 
     case 'RESET_GAME':
       return initialState;
@@ -435,6 +455,7 @@ export function GameProvider({ children }) {
         type: 'ONLINE_GAME_INITIALIZED',
         payload: { payload, myPlayerId },
       }),
+    handleOnlineGameStarted: () => dispatch({ type: 'ONLINE_GAME_STARTED' }),
     resetGame: () => dispatch({ type: 'RESET_GAME' }),
   };
 
@@ -548,7 +569,9 @@ function Card({ card, type, onSymbolClick }) {
 // src/components/common/PlayArea.jsx
 function PlayArea() {
   const {
+    gameMode,
     offline: { pileCard, player },
+    online: { pileCard: OnlinePileCard, player: onlinePlayer },
   } = useGameContext();
   const { checkMatch } = useCardMatching();
 
@@ -559,11 +582,17 @@ function PlayArea() {
   return (
     <div className="flex-1 flex flex-col">
       <div className="flex-1 max-h-full flex items-center justify-center">
-        <Card card={pileCard} type="pile" onSymbolClick={() => {}} />
+        <Card
+          card={gameMode === 'bot' ? pileCard : OnlinePileCard}
+          type="pile"
+          onSymbolClick={() => {}}
+        />
       </div>
       <div className="flex-1 max-h-full flex items-center justify-center">
         <Card
-          card={player.currentCard}
+          card={
+            gameMode === 'bot' ? player.currentCard : onlinePlayer.currentCard
+          }
           type="player"
           onSymbolClick={handleSymbolClick}
         />
@@ -726,6 +755,11 @@ function GamePlay() {
   const {
     gameMode,
     offline: { gameStatus, player, opponent, timer },
+    online: {
+      gameStatus: onlineGameStatus,
+      player: onlinePlayer,
+      opponent: onlineOpponent,
+    },
   } = useGameContext();
   const navigate = useNavigate();
 
@@ -737,7 +771,7 @@ function GamePlay() {
     }
   }, [gameMode, navigate]);
 
-  switch (gameStatus) {
+  switch (gameMode === 'bot' ? gameStatus : onlineGameStatus) {
     case 'idle':
     case 'initializing':
       return (
@@ -748,16 +782,28 @@ function GamePlay() {
     case 'playing':
       return (
         <div className="relative flex flex-col" style={{ height: '100dvh' }}>
-          {gameMode === 'bot' && opponent && (
-            <div className="absolute top-4 left-4">
-              <h2>Opponent Cards Remaining: {opponent.cardsRemaining}</h2>
-              <ScoreBoard
-                playerScore={player.score}
-                botScore={opponent.score}
-              />
-              <h2>Time Remaining: {timer.remaining}</h2>
-            </div>
-          )}
+          {gameMode === 'bot' ||
+            (gameMode === 'online' && (
+              <div className="absolute top-4 left-4">
+                <h2>
+                  Opponent Cards Remaining:{' '}
+                  {gameMode === 'bot'
+                    ? opponent.cardsRemaining
+                    : onlineOpponent.cardsRemaining}
+                </h2>
+                <ScoreBoard
+                  playerScore={
+                    gameMode === 'bot' ? player.score : onlinePlayer.score
+                  }
+                  botScore={
+                    gameMode === 'bot' ? opponent.score : onlineOpponent.score
+                  }
+                />
+                {gameMode === 'bot' && (
+                  <h2>Time Remaining: {timer.remaining}</h2>
+                )}
+              </div>
+            ))}
 
           {gameMode === 'timed' && (
             <div className="absolute top-4 left-4">
@@ -768,7 +814,12 @@ function GamePlay() {
 
           <PlayArea />
           <div>
-            <h1>Cards Remaining: {player.cardsRemaining}</h1>
+            <h1>
+              Cards Remaining:{' '}
+              {gameMode === 'bot'
+                ? player.cardsRemaining
+                : onlinePlayer.cardsRemaining}
+            </h1>
           </div>
         </div>
       );
@@ -924,12 +975,11 @@ function RoomHome() {
 }
 
 function OnlineGamePlay() {
-  // const socketState = useSocketContext();
-  return (
-    <div className="flex justify-center items-center h-screen">
-      <h1>You are playing online!!</h1>
-    </div>
-  );
+  const { startOnlineCountdown } = useSocketContext();
+  useEffect(() => {
+    startOnlineCountdown();
+  }, []);
+  return <GamePlay />;
 }
 
 function OnlineRouter() {
