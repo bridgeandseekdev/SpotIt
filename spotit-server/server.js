@@ -24,7 +24,7 @@ app.get('/health', (req, res) => {
 });
 
 io.on('connection', (socket) => {
-  console.log(`User connected: ${socket.id}`);
+  console.log(`User connected: ${socket.id} at ${new Date().toLocaleString()}`);
 
   //Create a new lobby
   socket.on('create_room', ({ username }) => {
@@ -68,6 +68,59 @@ io.on('connection', (socket) => {
 
     io.to(roomId).emit('player_joined', {
       players: room.players,
+    });
+  });
+  //start game(initialized with the frontend generated deck)
+  socket.on('initialize_game', ({ roomId, deck }) => {
+    const room = rooms[roomId];
+    if (!room) {
+      return socket.emit('error', { message: 'Room not found' });
+    }
+
+    if (!room.active) {
+      return socket.emit('error', { message: 'Room is no longer active' });
+    }
+
+    if (room.players.length !== 2 || socket.id !== room.hostId) {
+      return socket.emit('error', { message: 'Error: Cannot start the game' });
+    }
+
+    const pileCard = deck.pop();
+    const midpoint = Math.floor(deck.length / 2);
+    const player1Deck = deck.slice(0, midpoint);
+    const player2Deck = deck.slice(midpoint);
+
+    const gameId = uuidv4();
+    games[gameId] = {
+      roomId,
+      gameStatus: 'idle',
+      startedAt: Date.now(),
+      pileCard,
+      pileCardMatchQueue: [],
+      isProcessingMatch: false, //Processing lock
+      players: {
+        [room.players[0].id]: {
+          deck: player1Deck,
+          currentCard: player1Deck[0],
+          score: 0,
+          cardsRemaining: player1Deck.length,
+          username: room.players[0].username,
+        },
+        [room.players[1].id]: {
+          deck: player2Deck,
+          currentCard: player1Deck[1],
+          score: 0,
+          cardsRemaining: player2Deck.length,
+          username: room.players[1].username,
+        },
+      },
+    };
+
+    io.to(roomId).emit('game_initialized', {
+      gameId,
+      pileCard,
+      players: games[gameId].players,
+      gameStatus: games[gameId].gameStatus,
     });
   });
 

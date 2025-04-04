@@ -15,11 +15,9 @@ import {
   useNavigate,
 } from 'react-router-dom';
 import { io } from 'socket.io-client';
-import { getBaseLayout } from './utils/layoutEngine';
-import { getSymbolRotation, getSymbolScale } from './utils/visualEngine';
+import { loadDeck } from './utils/gameUtils';
 import Symbol from './components/Symbol';
 import { DIFFICULTY_CONFIGS } from './constants/gameConstants';
-import shuffle from 'lodash.shuffle';
 
 //src/context/SocketContext.jsx
 const SocketContext = createContext();
@@ -34,6 +32,14 @@ export function SocketProvider({ children }) {
     myPlayerId: null,
   };
   const [onlineState, setOnlineState] = useState(initialState);
+  const onlineStateRef = useRef(initialState);
+
+  const { difficulty, handleOnlineGameInitialized } = useGameContext();
+
+  useEffect(() => {
+    // Update ref whenever state changes
+    onlineStateRef.current = onlineState;
+  }, [onlineState]);
 
   useEffect(() => {
     const newSocket = io('http://localhost:3000');
@@ -46,6 +52,10 @@ export function SocketProvider({ children }) {
 
     newSocket.on('room_joined', handleRoomJoined);
     newSocket.on('player_joined', handlePlayerJoined);
+    newSocket.on('game_initialized', (payload) =>
+      handleOnlineGameInitialized(payload, onlineStateRef.current.myPlayerId),
+    );
+    newSocket.on('error', (err) => console.log(err));
 
     setSocket(newSocket);
 
@@ -88,6 +98,11 @@ export function SocketProvider({ children }) {
     socket.emit('join_room', { roomId, username });
   };
 
+  const startGame = async () => {
+    const deck = await loadDeck(difficulty);
+    socket.emit('initialize_game', { roomId: onlineState.roomId, deck });
+  };
+
   const resetSocket = () => {
     setSocket(null);
     setOnlineState(initialState);
@@ -100,6 +115,7 @@ export function SocketProvider({ children }) {
         createRoom,
         joinRoom,
         resetSocket,
+        startGame,
       }}
     >
       {children}
@@ -137,6 +153,7 @@ const initialState = {
       remaining: 0,
     },
   },
+  online: {},
 };
 
 function gameReducer(state, action) {
@@ -176,11 +193,34 @@ function gameReducer(state, action) {
       };
     case 'TIMER_EXPIRED':
       return handleTimerExpired(state);
+
+    case 'ONLINE_GAME_INITIALIZED':
+      return handleOnlineGameInitialized(state, action.payload);
+
     case 'RESET_GAME':
       return initialState;
     default:
       return state;
   }
+}
+
+function handleOnlineGameInitialized(state, { payload, myPlayerId }) {
+  const { gameId, pileCard, players, gameStatus } = payload;
+  const player = players[myPlayerId];
+  const opponentId = Object.keys(players).find((id) => id !== myPlayerId);
+  const opponent = players[opponentId];
+
+  return {
+    ...state,
+    online: {
+      ...state.online,
+      gameId,
+      gameStatus,
+      pileCard,
+      player,
+      opponent,
+    },
+  };
 }
 
 async function initializeGame(mode, difficulty) {
@@ -390,6 +430,11 @@ export function GameProvider({ children }) {
     updateTimer: (newTime) =>
       dispatch({ type: 'UPDATE_TIMER', payload: newTime }),
     timerExpired: () => dispatch({ type: 'TIMER_EXPIRED' }),
+    handleOnlineGameInitialized: (payload, myPlayerId) =>
+      dispatch({
+        type: 'ONLINE_GAME_INITIALIZED',
+        payload: { payload, myPlayerId },
+      }),
     resetGame: () => dispatch({ type: 'RESET_GAME' }),
   };
 
@@ -402,56 +447,6 @@ export function useGameContext() {
     throw new Error('useGame must be used within a GameProvider');
   }
   return context;
-}
-
-const deckModules = {
-  classic: {
-    3: () => import('/src/assets/decks/classic_deck_2.json'),
-    5: () => import('/src/assets/decks/classic_deck_4.json'),
-    8: () => import('/src/assets/decks/classic_deck_7.json'),
-  },
-};
-
-const getDeckBySettings = async (theme, symbolsPerCard) => {
-  try {
-    const deckModule = await deckModules[theme][symbolsPerCard]();
-    return deckModule.default;
-  } catch (error) {
-    console.error('Failed to load deck', error);
-    return null;
-  }
-};
-
-//src/utils/gameUtils.js
-export async function loadDeck(difficulty) {
-  const { symbolsPerCard } = DIFFICULTY_CONFIGS[difficulty];
-  const positions = getBaseLayout(symbolsPerCard).positions;
-
-  const rawDeck = await (async () => {
-    switch (difficulty) {
-      case 'easy':
-        return await getDeckBySettings('classic', symbolsPerCard);
-      case 'medium':
-        return await getDeckBySettings('classic', symbolsPerCard);
-      case 'hard':
-        return await getDeckBySettings('classic', symbolsPerCard);
-      default:
-        return null;
-    }
-  })();
-
-  // Transform each card to include pre-calculated layout values
-  return shuffle(
-    rawDeck.map((card) => {
-      const shuffledSymbols = shuffle([...card]);
-      return shuffledSymbols.map((symbol, index) => ({
-        symbol,
-        position: positions[index],
-        rotation: getSymbolRotation(difficulty),
-        scale: getSymbolScale(difficulty, index),
-      }));
-    }),
-  );
 }
 
 function getRandomBotTime(difficulty) {
@@ -789,6 +784,40 @@ function GamePlay() {
   }
 }
 
+function OnlineDifficultySelect() {
+  const { setDifficulty, difficulty } = useGameContext();
+
+  const handleDifficultySelection = (difficulty) => {
+    setDifficulty(difficulty);
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center gap-8">
+      <h1>Choose Difficulty</h1>
+      <div className="flex items-center justify-center gap-4">
+        <button
+          className={`${difficulty === 'easy' ? 'bg-blue-400' : null}`}
+          onClick={() => handleDifficultySelection('easy')}
+        >
+          Easy
+        </button>
+        <button
+          className={`${difficulty === 'medium' ? 'bg-blue-400' : null}`}
+          onClick={() => handleDifficultySelection('medium')}
+        >
+          Medium
+        </button>
+        <button
+          className={`${difficulty === 'hard' ? 'bg-blue-400' : null}`}
+          onClick={() => handleDifficultySelection('hard')}
+        >
+          Hard
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function CreateRoom() {
   const {
     createRoom,
@@ -847,9 +876,22 @@ function CreateRoom() {
 }
 
 function RoomHome() {
+  const navigate = useNavigate();
   const {
     onlineState: { roomId, hostId, myPlayerId, players },
+    startGame,
   } = useSocketContext();
+
+  const {
+    online: { gameId },
+  } = useGameContext();
+
+  useEffect(() => {
+    if (gameId) {
+      navigate('/online/play');
+    }
+  }, [gameId, navigate]);
+
   return (
     <div className="flex h-screen flex-col justify-center items-center">
       <h1 className="font-bold text-xl">Welcome! to lobby</h1>
@@ -866,16 +908,28 @@ function RoomHome() {
         </div>
       )}
 
-      {players.length === 2 && <button>Start Game</button>}
+      {players.length === 2 &&
+        (hostId === myPlayerId ? (
+          <div>
+            <OnlineDifficultySelect />
+            <button className="mt-4" onClick={() => startGame()}>
+              Start Game
+            </button>
+          </div>
+        ) : (
+          'Waiting for host to start the game'
+        ))}
     </div>
   );
 }
 
 function OnlineGamePlay() {
   // const socketState = useSocketContext();
-  <div>
-    <h1>You are playing online!!</h1>
-  </div>;
+  return (
+    <div className="flex justify-center items-center h-screen">
+      <h1>You are playing online!!</h1>
+    </div>
+  );
 }
 
 function OnlineRouter() {
