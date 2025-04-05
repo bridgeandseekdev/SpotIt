@@ -39,6 +39,7 @@ export function SocketProvider({ children }) {
     handleOnlineGameInitialized,
     handleOnlineGameStarted,
     online: { gameId },
+    handleOnlineMatchFound,
   } = useGameContext();
 
   useEffect(() => {
@@ -61,6 +62,10 @@ export function SocketProvider({ children }) {
       handleOnlineGameInitialized(payload, onlineStateRef.current.myPlayerId),
     );
     newSocket.on('game_started', handleOnlineGameStarted);
+    newSocket.on('match_success', (payload) =>
+      handleOnlineMatchFound(payload, onlineStateRef.current.myPlayerId),
+    );
+    newSocket.on('match_failed', (data) => console.log(data));
     newSocket.on('error', (err) => console.log(err));
 
     setSocket(newSocket);
@@ -113,6 +118,11 @@ export function SocketProvider({ children }) {
     socket.emit('start_countdown', { roomId: onlineState.roomId, gameId });
   };
 
+  const checkMatch = (symbol) => {
+    console.log('sending data', gameId, symbol);
+    socket.emit('check_match', { gameId, symbol });
+  };
+
   const resetSocket = () => {
     setSocket(null);
     setOnlineState(initialState);
@@ -127,6 +137,7 @@ export function SocketProvider({ children }) {
         resetSocket,
         startGame,
         startOnlineCountdown,
+        checkMatch,
       }}
     >
       {children}
@@ -217,6 +228,9 @@ function gameReducer(state, action) {
         },
       };
 
+    case 'ONLINE_MATCH_FOUND':
+      return handleOnlineMatchFound(state, action.payload);
+
     case 'RESET_GAME':
       return initialState;
     default:
@@ -239,6 +253,33 @@ function handleOnlineGameInitialized(state, { payload, myPlayerId }) {
       pileCard,
       player,
       opponent,
+    },
+  };
+}
+
+function handleOnlineMatchFound(state, { payload, myPlayerId }) {
+  const {
+    newPileCard,
+    nextPlayerCard,
+    playerCardsRemaining,
+    playerId,
+    playerScore,
+    updatedDeck,
+  } = payload;
+  const whoseToUpdate = playerId === myPlayerId ? 'player' : 'opponent';
+
+  return {
+    ...state,
+    online: {
+      ...state.online,
+      pileCard: newPileCard,
+      [whoseToUpdate]: {
+        ...state.online[whoseToUpdate],
+        currentCard: nextPlayerCard,
+        score: playerScore,
+        cardsRemaining: playerCardsRemaining,
+        deck: updatedDeck,
+      },
     },
   };
 }
@@ -456,6 +497,12 @@ export function GameProvider({ children }) {
         payload: { payload, myPlayerId },
       }),
     handleOnlineGameStarted: () => dispatch({ type: 'ONLINE_GAME_STARTED' }),
+    handleOnlineMatchFound: (payload, myPlayerId) =>
+      dispatch({
+        type: 'ONLINE_MATCH_FOUND',
+        payload: { payload, myPlayerId },
+      }),
+    handleOnlineMatchFailed: () => dispatch({ type: 'ONLINE_MATCH_FAILED' }),
     resetGame: () => dispatch({ type: 'RESET_GAME' }),
   };
 
@@ -567,7 +614,7 @@ function Card({ card, type, onSymbolClick }) {
 }
 
 // src/components/common/PlayArea.jsx
-function PlayArea() {
+function PlayArea({ handleCheckMatch: handleOnlineCheckMatch }) {
   const {
     gameMode,
     offline: { pileCard, player },
@@ -576,7 +623,11 @@ function PlayArea() {
   const { checkMatch } = useCardMatching();
 
   const handleSymbolClick = (symbol) => {
-    checkMatch(symbol);
+    if (handleOnlineCheckMatch) {
+      handleOnlineCheckMatch(symbol);
+    } else {
+      checkMatch(symbol);
+    }
   };
 
   return (
@@ -751,7 +802,7 @@ function GameResult() {
   );
 }
 
-function GamePlay() {
+function GamePlay({ onlineCheckMatch }) {
   const {
     gameMode,
     offline: { gameStatus, player, opponent, timer },
@@ -812,7 +863,9 @@ function GamePlay() {
             </div>
           )}
 
-          <PlayArea />
+          <PlayArea
+            handleCheckMatch={gameMode === 'online' ? onlineCheckMatch : null}
+          />
           <div>
             <h1>
               Cards Remaining:{' '}
@@ -975,11 +1028,11 @@ function RoomHome() {
 }
 
 function OnlineGamePlay() {
-  const { startOnlineCountdown } = useSocketContext();
+  const { startOnlineCountdown, checkMatch } = useSocketContext();
   useEffect(() => {
     startOnlineCountdown();
   }, []);
-  return <GamePlay />;
+  return <GamePlay onlineCheckMatch={checkMatch} />;
 }
 
 function OnlineRouter() {
