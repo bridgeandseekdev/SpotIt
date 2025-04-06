@@ -1,4 +1,5 @@
 import { useThemeContext } from '../context';
+import { Lightbulb, MoonStarIcon } from 'lucide-react';
 
 const DarkModeSwitch = () => {
   const { isDark, toggleTheme } = useThemeContext();
@@ -8,7 +9,7 @@ const DarkModeSwitch = () => {
         onClick={toggleTheme}
         aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       >
-        {isDark ? 'Light' : 'Dark'}
+        {isDark ? <Lightbulb size={24} /> : <MoonStarIcon size={24} />}
       </button>
     </div>
   );

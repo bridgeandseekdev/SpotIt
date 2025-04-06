@@ -601,24 +601,28 @@ function useCardMatching() {
 // src/hooks/useTimerEffect.js
 function useTimerEffect() {
   const {
-    offline: { timer },
+    offline: { timer, gameStatus },
     updateTimer,
     timerExpired,
   } = useGameContext();
   const timerRef = useRef(null);
 
   useEffect(() => {
-    if (timer.enabled && timer.remaining > 0) {
+    if (timer.enabled && timer.remaining > 0 && gameStatus === 'playing') {
       timerRef.current = setInterval(() => {
         updateTimer(timer.remaining - 1);
       }, 1000);
 
       return () => clearInterval(timerRef.current);
-    } else if (timer.enabled && timer.remaining <= 0) {
+    } else if (
+      timer.enabled &&
+      timer.remaining <= 0 &&
+      gameStatus === 'playing'
+    ) {
       clearInterval(timerRef.current);
       timerExpired();
     }
-  }, [timer.enabled, timer.remaining]);
+  }, [timer.enabled, timer.remaining, gameStatus]);
 }
 
 // src/components/common/Card.jsx
@@ -626,7 +630,7 @@ function Card({ card, type, onSymbolClick }) {
   if (!card) return null;
   return (
     <div
-      className={`relative h-[80%] sm:h-[90%] aspect-square rounded-full noise-svg dark:noise-svg-none bg-white dark:bg-bg-dark-primary border ${
+      className={`relative h-[80%] sm:h-[90%] aspect-square rounded-full bg-white dark:bg-bg-dark-primary border ${
         type === 'pile'
           ? 'border-neutral-200'
           : 'border-green-400 dark:shadow-md dark:shadow-gray-500 shadow-md backdrop-blur-3xl'
