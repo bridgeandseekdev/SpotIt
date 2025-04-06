@@ -3,7 +3,6 @@ const http = require('http');
 const { Server } = require('socket.io');
 const { v4: uuidv4 } = require('uuid');
 const cors = require('cors');
-const { timeStamp } = require('console');
 
 const app = express();
 app.use(cors());
@@ -88,13 +87,6 @@ io.on('connection', (socket) => {
     if (room.players.length !== 2) {
       return socket.emit('error', { message: 'Error: Cannot start the game' });
     }
-
-    if (room.gameInitialized) {
-      console.log('Room already initialized, ignoring duplicate request');
-      return;
-    }
-
-    room.gameInitialized = true;
 
     const pileCard = deck.pop();
     const midpoint = Math.floor(deck.length / 2);
@@ -290,7 +282,7 @@ io.on('connection', (socket) => {
           },
         });
 
-        // Clean up game after 2 minutes
+        // Clean up game after 5 minutes
         setTimeout(() => {
           delete games[gameId];
         }, 300000);

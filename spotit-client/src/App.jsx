@@ -40,6 +40,7 @@ export function SocketProvider({ children }) {
     handleOnlineGameStarted,
     online: { gameId },
     handleOnlineMatchFound,
+    handleOnlineGameover,
   } = useGameContext();
 
   useEffect(() => {
@@ -66,6 +67,13 @@ export function SocketProvider({ children }) {
       handleOnlineMatchFound(payload, onlineStateRef.current.myPlayerId),
     );
     newSocket.on('match_failed', (data) => console.log(data));
+    newSocket.on('game_over', (payload) =>
+      handleOnlineGameover(
+        payload,
+        onlineStateRef.current.myPlayerId,
+        onlineStateRef.current.players,
+      ),
+    );
     newSocket.on('error', (err) => console.log(err));
 
     setSocket(newSocket);
@@ -231,8 +239,24 @@ function gameReducer(state, action) {
     case 'ONLINE_MATCH_FOUND':
       return handleOnlineMatchFound(state, action.payload);
 
+    case 'ONLINE_MATCH_OVER':
+      return {
+        ...state,
+        online: {
+          ...state.online,
+          gameStatus: 'game_over',
+        },
+      };
+
     case 'RESET_GAME':
       return initialState;
+
+    case 'RESET_ONLINE_GAME':
+      return {
+        ...state,
+        online: {},
+      };
+
     default:
       return state;
   }
@@ -283,6 +307,10 @@ function handleOnlineMatchFound(state, { payload, myPlayerId }) {
     },
   };
 }
+
+// function handleOnlineGameover(state, {payload, myPlayerId}) {
+//   const {winner, finalScores} = payload;
+// }
 
 async function initializeGame(mode, difficulty) {
   const fullDeck = await loadDeck(difficulty);
@@ -503,7 +531,9 @@ export function GameProvider({ children }) {
         payload: { payload, myPlayerId },
       }),
     handleOnlineMatchFailed: () => dispatch({ type: 'ONLINE_MATCH_FAILED' }),
+    handleOnlineGameover: () => dispatch({ type: 'ONLINE_MATCH_OVER' }),
     resetGame: () => dispatch({ type: 'RESET_GAME' }),
+    resetOnlineGame: () => dispatch({ type: 'RESET_ONLINE_GAME' }),
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
@@ -634,7 +664,7 @@ function PlayArea({ handleCheckMatch: handleOnlineCheckMatch }) {
     <div className="flex-1 flex flex-col">
       <div className="flex-1 max-h-full flex items-center justify-center">
         <Card
-          card={gameMode === 'bot' ? pileCard : OnlinePileCard}
+          card={gameMode === 'online' ? OnlinePileCard : pileCard}
           type="pile"
           onSymbolClick={() => {}}
         />
@@ -642,7 +672,9 @@ function PlayArea({ handleCheckMatch: handleOnlineCheckMatch }) {
       <div className="flex-1 max-h-full flex items-center justify-center">
         <Card
           card={
-            gameMode === 'bot' ? player.currentCard : onlinePlayer.currentCard
+            gameMode === 'online'
+              ? onlinePlayer.currentCard
+              : player.currentCard
           }
           type="player"
           onSymbolClick={handleSymbolClick}
@@ -653,7 +685,7 @@ function PlayArea({ handleCheckMatch: handleOnlineCheckMatch }) {
 }
 
 // src/components/mode-specific/ScoreBoard.jsx
-function ScoreBoard({ playerScore, botScore = null }) {
+function ScoreBoard({ playerScore, botScore = null, opponentName }) {
   return (
     <div className="flex justify-center space-x-8 mt-4 mb-4">
       <div className="text-center">
@@ -663,7 +695,9 @@ function ScoreBoard({ playerScore, botScore = null }) {
 
       {botScore !== null && (
         <div className="text-center">
-          <h3 className="font-semibold">Bot Score</h3>
+          <h3 className="font-semibold">{`${
+            opponentName ? opponentName : 'Bot'
+          } Score`}</h3>
           <div className="text-2xl font-bold">{botScore}</div>
         </div>
       )}
@@ -760,44 +794,90 @@ function GameResult() {
   const navigate = useNavigate();
   const {
     gameMode,
-    offline: { player, opponent },
+    offline: { player: offlinePlayer, opponent: offlineOpponent },
+    online: { player: onlinePlayer, opponent: onlineOpponent },
     initializeGame,
     resetGame,
     difficulty,
+    resetOnlineGame,
   } = useGameContext();
+  let totalScore;
+
+  if (gameMode === 'timed') {
+    const n = DIFFICULTY_CONFIGS[difficulty].symbolsPerCard - 1;
+    totalScore = Math.pow(n, 2) + n;
+  }
 
   const handlePlayAgain = () => {
     initializeGame();
   };
 
   const handleBackToMenu = () => {
-    resetGame();
-    navigate('/');
+    if (gameMode === 'online') {
+      resetOnlineGame();
+      navigate('/online');
+    } else {
+      resetGame();
+      navigate('/');
+    }
   };
 
-  const n = DIFFICULTY_CONFIGS[difficulty].symbolsPerCard - 1;
-  const totalCards = Math.pow(n, 2) + n;
+  const player = gameMode === 'online' ? onlinePlayer : offlinePlayer;
+  const opponent = gameMode === 'online' ? onlineOpponent : offlineOpponent;
 
   return (
     <div className="flex flex-col items-center justify-center h-screen gap-8">
       <h1 className="text-2xl font-bold">Game Over!</h1>
-      {gameMode === 'bot' ? (
+      {gameMode === 'bot' || gameMode === 'online' ? (
+        <div>
+          <h2>
+            {player.score > opponent.score
+              ? 'You Win!'
+              : player.score < opponent.score
+              ? opponent.username
+                ? `${opponent.username} wins!`
+                : 'Bot Wins!'
+              : "It's a Tie!"}
+          </h2>
+
+          {gameMode === 'online' && (
+            <div>
+              Final Score:
+              <p>
+                {player.username}: {player.score}
+              </p>
+              <p>
+                {opponent.username}: {opponent.score}
+              </p>
+            </div>
+          )}
+
+          {gameMode === 'bot' && (
+            <div>
+              Final Score:
+              <p>You: {player.score}</p>
+              <p>Bot: {opponent.score}</p>
+            </div>
+          )}
+        </div>
+      ) : null}
+
+      {gameMode === 'timed' && (
         <h2>
-          {player.score > opponent.score
-            ? 'You Win!'
-            : player.score < opponent.score
-            ? 'Bot Wins!'
-            : "It's a Tie!"}
-        </h2>
-      ) : (
-        <h2>
-          Final Score: {player.score} / {totalCards}{' '}
+          Final Score: {player.score} /{totalScore}
         </h2>
       )}
-      <div className="flex gap-4">
-        <button onClick={handlePlayAgain}>Play Again</button>
-        <button onClick={handleBackToMenu}>Back to Menu</button>
-      </div>
+
+      {gameMode === 'online' ? (
+        <div>
+          <button onClick={handleBackToMenu}>Back to Lobby</button>
+        </div>
+      ) : (
+        <div className="flex gap-4">
+          <button onClick={handlePlayAgain}>Play Again</button>
+          <button onClick={handleBackToMenu}>Back to Menu</button>
+        </div>
+      )}
     </div>
   );
 }
@@ -822,7 +902,7 @@ function GamePlay({ onlineCheckMatch }) {
     }
   }, [gameMode, navigate]);
 
-  switch (gameMode === 'bot' ? gameStatus : onlineGameStatus) {
+  switch (gameMode === 'online' ? onlineGameStatus : gameStatus) {
     case 'idle':
     case 'initializing':
       return (
@@ -833,28 +913,28 @@ function GamePlay({ onlineCheckMatch }) {
     case 'playing':
       return (
         <div className="relative flex flex-col" style={{ height: '100dvh' }}>
-          {gameMode === 'bot' ||
-            (gameMode === 'online' && (
-              <div className="absolute top-4 left-4">
-                <h2>
-                  Opponent Cards Remaining:{' '}
-                  {gameMode === 'bot'
-                    ? opponent.cardsRemaining
-                    : onlineOpponent.cardsRemaining}
-                </h2>
-                <ScoreBoard
-                  playerScore={
-                    gameMode === 'bot' ? player.score : onlinePlayer.score
-                  }
-                  botScore={
-                    gameMode === 'bot' ? opponent.score : onlineOpponent.score
-                  }
-                />
-                {gameMode === 'bot' && (
-                  <h2>Time Remaining: {timer.remaining}</h2>
-                )}
-              </div>
-            ))}
+          {gameMode === 'bot' || gameMode === 'online' ? (
+            <div className="absolute top-4 left-4">
+              <h2>
+                Opponent Cards Remaining:{' '}
+                {gameMode === 'bot'
+                  ? opponent.cardsRemaining
+                  : onlineOpponent.cardsRemaining}
+              </h2>
+              <ScoreBoard
+                playerScore={
+                  gameMode === 'bot' ? player.score : onlinePlayer.score
+                }
+                botScore={
+                  gameMode === 'bot' ? opponent.score : onlineOpponent.score
+                }
+                opponentName={
+                  gameMode === 'online' ? onlineOpponent.username : null
+                }
+              />
+              {gameMode === 'bot' && <h2>Time Remaining: {timer.remaining}</h2>}
+            </div>
+          ) : null}
 
           {gameMode === 'timed' && (
             <div className="absolute top-4 left-4">
@@ -869,9 +949,9 @@ function GamePlay({ onlineCheckMatch }) {
           <div>
             <h1>
               Cards Remaining:{' '}
-              {gameMode === 'bot'
-                ? player.cardsRemaining
-                : onlinePlayer.cardsRemaining}
+              {gameMode === 'online'
+                ? onlinePlayer.cardsRemaining
+                : player.cardsRemaining}
             </h1>
           </div>
         </div>
