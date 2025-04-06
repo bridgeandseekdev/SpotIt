@@ -49,7 +49,9 @@ export function SocketProvider({ children }) {
   }, [onlineState]);
 
   useEffect(() => {
-    const newSocket = io('http://localhost:3000');
+    const newSocket = io(
+      import.meta.env.VITE_SOCKET_SERVER_URL || 'http://localhost:3000',
+    );
 
     newSocket.on('connect', () => {
       setOnlineState((prev) => ({ ...prev, isConnected: true }));
