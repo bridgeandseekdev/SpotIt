@@ -2,8 +2,15 @@ import { useNavigate } from 'react-router-dom';
 import { useGameContext } from '../../context';
 import { DIFFICULTY_CONFIGS } from '../../constants/gameConstants';
 import { Trophy, Medal, Equal } from 'lucide-react';
+import Confetti from 'react-confetti';
+import { useEffect, useState } from 'react';
 
 function GameResult() {
+  const [windowDimension, setWindowDimension] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  });
+
   const navigate = useNavigate();
   const {
     gameMode,
@@ -38,8 +45,30 @@ function GameResult() {
   const player = gameMode === 'online' ? onlinePlayer : offlinePlayer;
   const opponent = gameMode === 'online' ? onlineOpponent : offlineOpponent;
 
+  const showConfetti = gameMode === 'online' && player.score > opponent.score;
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowDimension({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
+      {showConfetti && (
+        <Confetti
+          width={windowDimension.width}
+          height={windowDimension.height}
+          numberOfPieces={200}
+          recycle={false}
+        />
+      )}
       <div className=" dark:bg-bg-dark-secondary rounded-xl p-8 shadow-lg max-w-md w-full border border-neutral-200 dark:border-neutral-700">
         <h1 className="text-4xl font-bold text-center mb-8 animate-bounce">
           Game Over!

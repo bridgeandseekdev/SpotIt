@@ -43,7 +43,7 @@ function PlayArea({ handleCheckMatch: handleOnlineCheckMatch }) {
           />
         </div>
       </div>
-      <QuitGameButton />
+      {gameMode !== 'online' ? <QuitGameButton /> : null}
     </div>
   );
 }
