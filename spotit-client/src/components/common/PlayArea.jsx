@@ -1,6 +1,7 @@
 import { useGameContext } from '../../context';
 import { useCardMatching } from '../../hooks/useCardMatching';
 import Card from './Card';
+import QuitGameButton from './QuitGameButton';
 
 function PlayArea({ handleCheckMatch: handleOnlineCheckMatch }) {
   const {
@@ -42,6 +43,7 @@ function PlayArea({ handleCheckMatch: handleOnlineCheckMatch }) {
           />
         </div>
       </div>
+      <QuitGameButton />
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { Lightbulb, MoonStarIcon } from 'lucide-react';
 const DarkModeSwitch = () => {
   const { isDark, toggleTheme } = useThemeContext();
   return (
-    <div className="absolute top-4 right-6 z-50">
+    <div className="absolute top-8 right-6 z-50">
       <button
         onClick={toggleTheme}
         aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
