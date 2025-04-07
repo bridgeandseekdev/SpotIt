@@ -19,9 +19,9 @@ function PlayArea({ handleCheckMatch: handleOnlineCheckMatch }) {
   };
 
   return (
-    <div className="flex-1 grid grid-rows-2 border border-red-400 p-4">
-      <div className="flex items-center justify-center">
-        <div className="w-[90%] max-w-[400px] aspect-square">
+    <div className="h-full w-full flex flex-col justify-center p-4 mt-10 gap-4">
+      <div className="h-[45%] w-full flex justify-center p-[2%]">
+        <div className="h-full max-w-full rounded-full aspect-square">
           <Card
             card={gameMode === 'online' ? OnlinePileCard : pileCard}
             type="pile"
@@ -29,8 +29,8 @@ function PlayArea({ handleCheckMatch: handleOnlineCheckMatch }) {
           />
         </div>
       </div>
-      <div className="flex items-center justify-center">
-        <div className="w-[95%] max-w-[420px] aspect-square">
+      <div className="h-[55%] w-full flex justify-center p-[5%]">
+        <div className="h-full max-w-full rounded-full aspect-square">
           <Card
             card={
               gameMode === 'online'

@@ -30,7 +30,7 @@ function MainMenu() {
   return (
     <div className="max-w-md md:max-w-6xl mx-auto py-10">
       <div className="flex flex-col justify-center items-center">
-        <p className="rounded-full px-4 py-1 text-sm bg-white max-w-fit text-text-secondary">
+        <p className="rounded-full px-4  text-sm bg-bg-dark-secondary text-text-dark-primary dark:bg-white dark:text-text-primary max-w-fit leading-loose">
           The Ultimate Pattern Matching Game
         </p>
         <div className="flex flex-col justify-center items-center mt-2">

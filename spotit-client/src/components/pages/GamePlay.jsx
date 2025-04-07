@@ -36,9 +36,9 @@ function GamePlay({ onlineCheckMatch }) {
       );
     case 'playing':
       return (
-        <div className="flex flex-col h-[100dvh]">
+        <div className="h-[100dvh] flex flex-col overflow-hidden">
           {(gameMode === 'bot' || gameMode === 'online') && (
-            <div className="h-16 flex items-center border border-blue-400 justify-center bg-gray-50 dark:bg-gray-800 border-b dark:border-gray-700">
+            <div className="h-[10vh] flex shrink-0 items-center justify-center bg-gray-50 dark:bg-gray-800 border-b dark:border-gray-700">
               <div className="flex items-center gap-4">
                 <User2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                 <span className="font-medium">
@@ -56,13 +56,13 @@ function GamePlay({ onlineCheckMatch }) {
             </div>
           )}
 
-          <div className="flex-1 relative">
+          <div className="flex-1 flex flex-col justify-center items-center overflow-hidden relative">
             <PlayArea
               handleCheckMatch={gameMode === 'online' ? onlineCheckMatch : null}
             />
           </div>
 
-          <div className="h-16 flex items-center justify-center border border-green-400 bg-gray-50 dark:bg-gray-800 border-t dark:border-gray-700">
+          <div className="h-16 flex items-center justify-center bg-gray-50 dark:bg-gray-800 border-t dark:border-gray-700">
             {gameMode === 'timed' ? (
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
