@@ -40,7 +40,7 @@ export const DIFFICULTY_CONFIGS = {
     symbolsPerCard: '3',
     scale: 'MEDIUM',
     rotation: false,
-    timerSeconds: 10,
+    timerSeconds: 5,
   },
   medium: {
     symbolsPerCard: '5',
@@ -53,6 +53,6 @@ export const DIFFICULTY_CONFIGS = {
     randomScale: true,
     rotation: true,
     maxRotation: 45,
-    timerSeconds: 4,
+    timerSeconds: 8,
   },
 };

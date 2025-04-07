@@ -54,9 +54,9 @@ export async function loadDeck(difficulty) {
 
 export function getRandomBotTime(difficulty) {
   const ranges = {
-    easy: { min: 5, max: 10 },
+    easy: { min: 3, max: 5 },
     medium: { min: 3, max: 8 },
-    hard: { min: 3, max: 5 },
+    hard: { min: 3, max: 12 },
   };
 
   const { min, max } = ranges[difficulty];
