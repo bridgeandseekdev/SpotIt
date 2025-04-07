@@ -62,7 +62,13 @@ function GamePlay({ onlineCheckMatch }) {
             />
           </div>
 
-          <div className="h-16 flex items-center justify-center bg-gray-50 dark:bg-gray-800 border-t dark:border-gray-700">
+          <div
+            className={`h-16 flex items-center justify-center bg-gray-50 dark:bg-gray-800 border-t dark:border-gray-700 ${
+              timer.remaining <= 3 && gameMode === 'timed'
+                ? 'animate-shake'
+                : ''
+            }`}
+          >
             {gameMode === 'timed' ? (
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
