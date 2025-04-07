@@ -21,7 +21,6 @@ const getDeckBySettings = async (theme, symbolsPerCard) => {
   }
 };
 
-//src/utils/gameUtils.js
 export async function loadDeck(difficulty) {
   const { symbolsPerCard } = DIFFICULTY_CONFIGS[difficulty];
   const positions = getBaseLayout(symbolsPerCard).positions;
@@ -51,4 +50,28 @@ export async function loadDeck(difficulty) {
       }));
     }),
   );
+}
+
+export function getRandomBotTime(difficulty) {
+  const ranges = {
+    easy: { min: 5, max: 10 },
+    medium: { min: 3, max: 8 },
+    hard: { min: 3, max: 5 },
+  };
+
+  const { min, max } = ranges[difficulty];
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+export function findMatchingSymbol(card1, card2) {
+  const card1Symbols = card1.map((item) => item.symbol);
+  const card2Symbols = card2.map((item) => item.symbol);
+
+  for (const symbol of card1Symbols) {
+    if (card2Symbols.includes(symbol)) {
+      return symbol;
+    }
+  }
+
+  return null;
 }
