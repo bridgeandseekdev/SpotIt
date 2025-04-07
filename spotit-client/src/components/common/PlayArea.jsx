@@ -21,7 +21,7 @@ function PlayArea({ handleCheckMatch: handleOnlineCheckMatch }) {
 
   return (
     <div className="h-full w-full flex flex-col justify-center p-4 mt-10 gap-4">
-      <div className="h-[45%] w-full flex justify-center p-[2%]">
+      <div className="h-[45%] w-full flex justify-center p-[2%] md:p-2">
         <div className="h-full max-w-full rounded-full aspect-square">
           <Card
             card={gameMode === 'online' ? OnlinePileCard : pileCard}
@@ -30,7 +30,7 @@ function PlayArea({ handleCheckMatch: handleOnlineCheckMatch }) {
           />
         </div>
       </div>
-      <div className="h-[55%] w-full flex justify-center p-[5%]">
+      <div className="h-[55%] w-full flex justify-center p-[3%] md:p-2">
         <div className="h-full max-w-full rounded-full aspect-square">
           <Card
             card={
