@@ -2,9 +2,9 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameContext } from '../../context';
 import PlayArea from '../common/PlayArea';
-import ScoreBoard from '../common/ScoreBoard';
 import GameResult from './GameResult';
 import { useTimerEffect } from '../../hooks/useTimerEffect';
+import { Layers, User2, Timer } from 'lucide-react';
 
 function GamePlay({ onlineCheckMatch }) {
   const {
@@ -30,53 +30,66 @@ function GamePlay({ onlineCheckMatch }) {
     case 'idle':
     case 'initializing':
       return (
-        <div className="flex items-center justify-center h-screen">
+        <div className="flex items-center justify-center h-[100dvh]">
           <div className="text-xl">Loading...</div>
         </div>
       );
     case 'playing':
       return (
-        <div className="relative flex flex-col" style={{ height: '100dvh' }}>
-          {gameMode === 'bot' || gameMode === 'online' ? (
-            <div className="absolute top-4 left-4">
-              <h2>
-                Opponent Cards Remaining:{' '}
-                {gameMode === 'bot'
-                  ? opponent.cardsRemaining
-                  : onlineOpponent.cardsRemaining}
-              </h2>
-              <ScoreBoard
-                playerScore={
-                  gameMode === 'bot' ? player.score : onlinePlayer.score
-                }
-                botScore={
-                  gameMode === 'bot' ? opponent.score : onlineOpponent.score
-                }
-                opponentName={
-                  gameMode === 'online' ? onlineOpponent.username : null
-                }
-              />
-              {gameMode === 'bot' && <h2>Time Remaining: {timer.remaining}</h2>}
-            </div>
-          ) : null}
-
-          {gameMode === 'timed' && (
-            <div className="absolute top-4 left-4">
-              <h1>Time Remaining: {timer.remaining}</h1>
-              <ScoreBoard playerScore={player.score} />
+        <div className="flex flex-col h-[100dvh]">
+          {(gameMode === 'bot' || gameMode === 'online') && (
+            <div className="h-16 flex items-center border border-blue-400 justify-center bg-gray-50 dark:bg-gray-800 border-b dark:border-gray-700">
+              <div className="flex items-center gap-4">
+                <User2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                <span className="font-medium">
+                  {gameMode === 'online' ? onlineOpponent.username : 'Bot'}
+                </span>
+                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                  <Layers className="w-5 h-5" />
+                  <span>
+                    {gameMode === 'bot'
+                      ? opponent.cardsRemaining
+                      : onlineOpponent.cardsRemaining}
+                  </span>
+                </div>
+              </div>
             </div>
           )}
 
-          <PlayArea
-            handleCheckMatch={gameMode === 'online' ? onlineCheckMatch : null}
-          />
-          <div>
-            <h1>
-              Cards Remaining:{' '}
-              {gameMode === 'online'
-                ? onlinePlayer.cardsRemaining
-                : player.cardsRemaining}
-            </h1>
+          <div className="flex-1 relative">
+            <PlayArea
+              handleCheckMatch={gameMode === 'online' ? onlineCheckMatch : null}
+            />
+          </div>
+
+          <div className="h-16 flex items-center justify-center border border-green-400 bg-gray-50 dark:bg-gray-800 border-t dark:border-gray-700">
+            {gameMode === 'timed' ? (
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Timer className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                  <span className="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded-full">
+                    {timer.remaining}s
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                  <Layers className="w-5 h-5" />
+                  <span>{player.cardsRemaining}</span>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-4">
+                <User2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                <span className="font-medium">You</span>
+                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+                  <Layers className="w-5 h-5" />
+                  <span>
+                    {gameMode === 'online'
+                      ? onlinePlayer.cardsRemaining
+                      : player.cardsRemaining}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       );

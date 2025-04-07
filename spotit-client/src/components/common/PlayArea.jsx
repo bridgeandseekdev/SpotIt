@@ -19,24 +19,28 @@ function PlayArea({ handleCheckMatch: handleOnlineCheckMatch }) {
   };
 
   return (
-    <div className="flex-1 flex flex-col">
-      <div className="flex-1 max-h-full flex items-center justify-center">
-        <Card
-          card={gameMode === 'online' ? OnlinePileCard : pileCard}
-          type="pile"
-          onSymbolClick={() => {}}
-        />
+    <div className="flex-1 grid grid-rows-2 border border-red-400 p-4">
+      <div className="flex items-center justify-center">
+        <div className="w-[90%] max-w-[400px] aspect-square">
+          <Card
+            card={gameMode === 'online' ? OnlinePileCard : pileCard}
+            type="pile"
+            onSymbolClick={() => {}}
+          />
+        </div>
       </div>
-      <div className="flex-1 max-h-full flex items-center justify-center">
-        <Card
-          card={
-            gameMode === 'online'
-              ? onlinePlayer.currentCard
-              : player.currentCard
-          }
-          type="player"
-          onSymbolClick={handleSymbolClick}
-        />
+      <div className="flex items-center justify-center">
+        <div className="w-[95%] max-w-[420px] aspect-square">
+          <Card
+            card={
+              gameMode === 'online'
+                ? onlinePlayer.currentCard
+                : player.currentCard
+            }
+            type="player"
+            onSymbolClick={handleSymbolClick}
+          />
+        </div>
       </div>
     </div>
   );
