@@ -1,4 +1,4 @@
-import Symbol from '../Symbol';
+import Symbol from './Symbol';
 
 function Card({ card, type, onSymbolClick }) {
   if (!card) return null;

@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import './index.css';
 import App from './App.jsx';
 import { ThemeProvider } from './context';
-import DarkModeSwitch from './components/DarkModeSwitch.jsx';
+import DarkModeSwitch from './components/common/DarkModeSwitch.jsx';
 // import Trial from './Trial.jsx';
 
 export const AppLayout = ({ children }) => {

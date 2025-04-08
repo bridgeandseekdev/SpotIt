@@ -1,4 +1,4 @@
-import { useThemeContext } from '../context';
+import { useThemeContext } from '../../context';
 import { Lightbulb, MoonStarIcon } from 'lucide-react';
 
 const DarkModeSwitch = () => {
