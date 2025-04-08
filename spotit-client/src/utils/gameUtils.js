@@ -1,7 +1,9 @@
 import shuffle from 'lodash.shuffle';
-import { DIFFICULTY_CONFIGS } from '../constants/gameConstants';
-import { getBaseLayout } from './layoutEngine';
-import { getSymbolRotation, getSymbolScale } from './visualEngine';
+import {
+  DIFFICULTY_CONFIGS,
+  SYMBOL_POSITIONS,
+  SCALE_VARIANTS,
+} from '../constants/gameConstants';
 
 const deckModules = {
   classic: {
@@ -9,6 +11,44 @@ const deckModules = {
     5: () => import('/src/assets/decks/classic_deck_4.json'),
     8: () => import('/src/assets/decks/classic_deck_7.json'),
   },
+};
+
+const getBaseLayout = (symbolCount) => {
+  return {
+    positions: SYMBOL_POSITIONS[symbolCount] || [],
+    containerClass: 'relative h-[80%] sm:h-[90%] aspect-square',
+  };
+};
+
+const getSymbolScale = (difficulty, symbolIndex) => {
+  const config = DIFFICULTY_CONFIGS[difficulty];
+
+  if (config.randomScale) {
+    const scales = ['SMALL', 'MEDIUM', 'LARGE'];
+    return scales[Math.floor(Math.random() * 3)];
+  }
+
+  if (config.scalePattern) {
+    return config.scalePattern[symbolIndex];
+  }
+
+  return config.scale;
+};
+
+const getSymbolRotation = (difficulty) => {
+  const config = DIFFICULTY_CONFIGS[difficulty];
+  if (!config.rotation) return 0;
+  return Math.floor(
+    Math.random() * config.maxRotation * (Math.random() > 0.5 ? 1 : -1),
+  );
+};
+
+export const getSymbolStyles = (scale) => {
+  const variant = SCALE_VARIANTS[scale];
+  return {
+    mobile: `${variant.mobile.w} ${variant.mobile.h}`,
+    desktop: `md:${variant.desktop.w} md:${variant.desktop.h}`,
+  };
 };
 
 const getDeckBySettings = async (theme, symbolsPerCard) => {
