@@ -2,6 +2,7 @@ import { useReducer } from 'react';
 import GameContext from './GameContext';
 import { loadDeck, getRandomBotTime } from '../../utils/gameUtils';
 import { DIFFICULTY_CONFIGS } from '../../constants/gameConstants';
+import { preloadIcons } from '../../assets/icons';
 
 const initialState = {
   gameMode: null,
@@ -149,6 +150,8 @@ function handleOnlineMatchFound(state, { payload, myPlayerId }) {
 
 async function initializeGame(mode, difficulty) {
   const fullDeck = await loadDeck(difficulty);
+  const uniqueSymbols = [...new Set(fullDeck.flat().map((obj) => obj.symbol))];
+  await preloadIcons(uniqueSymbols);
   const pileCard = fullDeck.pop();
 
   const commonState = {

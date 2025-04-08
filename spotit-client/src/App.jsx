@@ -1,10 +1,12 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { GameProvider } from './context';
 import { SocketProvider } from './context';
 import MainMenu from './components/pages/MainMenu';
 import DifficultySelect from './components/pages/DifficultySelect';
-import GamePlay from './components/pages/GamePlay';
 import OnlineRouter from './components/online/OnlineRouter';
+
+const GamePlay = lazy(() => import('./components/pages/GamePlay'));
 
 function App() {
   return (
@@ -13,7 +15,14 @@ function App() {
         <Routes>
           <Route path="/" element={<MainMenu />} />
           <Route path="/difficulty" element={<DifficultySelect />} />
-          <Route path="/play" element={<GamePlay />} />
+          <Route
+            path="/play"
+            element={
+              <Suspense fallback={<div>Loading...</div>}>
+                <GamePlay />
+              </Suspense>
+            }
+          />
           <Route
             path="/online/*"
             element={

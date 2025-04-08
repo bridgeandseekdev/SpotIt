@@ -1,8 +1,8 @@
-import { ICON_MAP } from '../../assets/icons';
+import { getIcon } from '../../assets/icons';
 import { getSymbolStyles } from '../../utils/gameUtils';
 
 const SymbolIcon = ({ symbol, className }) => {
-  const IconComponent = ICON_MAP[symbol];
+  const IconComponent = getIcon(symbol);
 
   if (!IconComponent) {
     console.warn(`No icon found for symbol: ${symbol}`);
