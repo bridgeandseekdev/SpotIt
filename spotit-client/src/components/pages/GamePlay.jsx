@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useGameContext } from '../../context';
+import { useGameContext, useNewGameContext } from '../../context';
 import PlayArea from '../common/PlayArea';
 import GameResult from './GameResult';
 import { useTimerEffect } from '../../hooks/useTimerEffect';
@@ -11,13 +11,19 @@ function GamePlay({ onlineCheckMatch }) {
   const {
     gameMode,
     difficulty,
-    offline: { gameStatus, player, opponent, timer },
+    offline: { gameStatus, player, opponent },
     online: {
       gameStatus: onlineGameStatus,
       player: onlinePlayer,
       opponent: onlineOpponent,
     },
   } = useGameContext();
+  const {
+    gameState: {
+      timer,
+      players: { self },
+    },
+  } = useNewGameContext();
   const navigate = useNavigate();
 
   useTimerEffect();
@@ -93,7 +99,7 @@ function GamePlay({ onlineCheckMatch }) {
                 </div>
                 <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
                   <Layers className="w-5 h-5" />
-                  <span>{player.cardsRemaining}</span>
+                  <span>{self.deck.length}</span>
                 </div>
               </div>
             ) : (

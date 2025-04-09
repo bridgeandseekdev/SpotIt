@@ -1,18 +1,18 @@
 import { useEffect, useRef } from 'react';
-import { useGameContext } from '../context';
+import { useNewGameContext } from '../context';
 
 export function useTimerEffect() {
   const {
-    offline: { timer, gameStatus },
-    updateTimer,
-    timerExpired,
-  } = useGameContext();
+    handleTimerExpiredAction,
+    updateTimerAction,
+    gameState: { gameStatus, timer },
+  } = useNewGameContext();
   const timerRef = useRef(null);
 
   useEffect(() => {
     if (timer.enabled && timer.remaining > 0 && gameStatus === 'playing') {
       timerRef.current = setInterval(() => {
-        updateTimer(timer.remaining - 1);
+        updateTimerAction(timer.remaining - 1);
       }, 1000);
 
       return () => clearInterval(timerRef.current);
@@ -22,7 +22,7 @@ export function useTimerEffect() {
       gameStatus === 'playing'
     ) {
       clearInterval(timerRef.current);
-      timerExpired();
+      handleTimerExpiredAction();
     }
   }, [timer.enabled, timer.remaining, gameStatus]);
 }

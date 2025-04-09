@@ -6,7 +6,7 @@ import NewGameContext from './NewGameContext';
 
 const initialState = {
   mode: null, //'practice' | 'timed' | 'bot' | 'online'
-  status: 'idle', // 'idle' | 'playing' | 'stand_by' | 'game_over' | 'error'
+  gameStatus: 'idle', // 'idle' | 'playing' | 'stand_by' | 'game_over' | 'error'
   pileCard: null,
   difficulty: null, // 'easy' | 'medium' | 'hard'
   timer: {
@@ -33,7 +33,7 @@ const initialState = {
   socketConnection: {
     socket: null,
     id: null, // Player id aka socket connection id
-    status: 'disconnected', // 'connected' | 'disconnected',
+    socketStatus: 'disconnected', // 'connected' | 'disconnected',
     roomId: null,
     hostId: null,
     gameId: null,
@@ -58,6 +58,14 @@ function gameReducer(state, action) {
         ...state,
         ...action.payload,
       };
+    case 'UPDATE_TIMER':
+      return {
+        ...state,
+        timer: {
+          ...state.timer,
+          remaining: action.payload,
+        },
+      };
     default:
       return state;
   }
@@ -73,7 +81,11 @@ export const NewGameProvider = ({ children }) => {
       const deck = await loadDeck(currentDifficulty);
       const uniqueSymbols = [...new Set(deck.flat().map((obj) => obj.symbol))];
       await preloadIcons(uniqueSymbols);
-      const result = gameModes[currentMode].init(gameState, deck);
+      const result = gameModes[currentMode].init({
+        state: gameState,
+        deck,
+        difficulty: currentDifficulty,
+      });
       dispatch({ type: 'UPDATE_GAME_STATE', payload: result });
     } catch (error) {
       console.error('Error initializing game:', error);
@@ -83,7 +95,18 @@ export const NewGameProvider = ({ children }) => {
 
   const handleMatch = (symbol) => {
     const currentMode = gameState.mode;
-    const result = gameModes[currentMode].handleMatch(gameState, symbol);
+    const result = gameModes[currentMode].handleMatch({
+      state: gameState,
+      symbol,
+    });
+    dispatch({ type: 'UPDATE_GAME_STATE', payload: result });
+  };
+
+  const handleTimerExpired = () => {
+    const currentMode = gameState.mode;
+    const result = gameModes[currentMode].handleTimerExpiry({
+      state: gameState,
+    });
     dispatch({ type: 'UPDATE_GAME_STATE', payload: result });
   };
 
@@ -92,8 +115,11 @@ export const NewGameProvider = ({ children }) => {
     setGameModeAction: (mode) => dispatch({ type: 'SET_MODE', payload: mode }),
     setDifficultyAction: (difficulty) =>
       dispatch({ type: 'SET_DIFFICULTY', payload: difficulty }),
-    handleMatchAction: handleMatch,
     initializeGameAction: initializeGame,
+    handleMatchAction: handleMatch,
+    updateTimerAction: (newTime) =>
+      dispatch({ type: 'UPDATE_TIMER', payload: newTime }),
+    handleTimerExpiredAction: handleTimerExpired,
   };
 
   return (
