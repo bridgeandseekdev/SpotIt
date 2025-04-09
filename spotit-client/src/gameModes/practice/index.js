@@ -1,3 +1,5 @@
+import { produce } from 'immer';
+
 const practiceMode = {
   config: {
     needsOpponent: false,
@@ -12,17 +14,11 @@ function handleInitialization(state, deck) {
   // Initialize the game state for practice mode
   const deckCopy = [...deck];
   const pileCard = deckCopy.pop();
-  const newState = {
-    ...state,
-    pileCard,
-    players: {
-      self: {
-        ...state.players.self, // id and name will be null for practice modes
-        deck: deckCopy,
-        currentCard: deckCopy[0],
-        score: 0,
-      },
-    },
-  };
+  const newState = produce(state, (draft) => {
+    draft.pileCard = pileCard;
+    draft.players.self.deck = deckCopy;
+    draft.players.self.currentCard = deckCopy[0];
+    draft.players.self.score = 0;
+  });
   return newState;
 }

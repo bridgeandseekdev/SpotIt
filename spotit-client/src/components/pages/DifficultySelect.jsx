@@ -1,18 +1,21 @@
 import { useNavigate } from 'react-router-dom';
-import { useGameContext } from '../../context';
+import { useGameContext, useNewGameContext } from '../../context';
 import { ArrowLeft } from 'lucide-react';
 
 function DifficultySelect() {
   const navigate = useNavigate();
   const { setDifficulty, gameMode, initializeGame, difficulty } =
     useGameContext();
+  const { setDifficultyAction, initializeGameAction } = useNewGameContext();
 
   const handleDifficultySelection = (difficulty) => {
     setDifficulty(difficulty);
+    setDifficultyAction(difficulty);
   };
 
-  const handleStartGame = () => {
-    initializeGame();
+  const handleStartGame = async () => {
+    await initializeGame();
+    await initializeGameAction();
     navigate('/play');
   };
 

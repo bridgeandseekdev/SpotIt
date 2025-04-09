@@ -10,7 +10,6 @@ export const preloadIcons = async (symbolList) => {
   });
 
   await Promise.all(loadPromises);
-  console.log(NEW_ICON_MAP);
   return NEW_ICON_MAP;
 };
 

@@ -50,7 +50,6 @@ export const SocketProvider = ({ children }) => {
     newSocket.on('match_success', (payload) =>
       handleOnlineMatchFound(payload, onlineStateRef.current.myPlayerId),
     );
-    newSocket.on('match_failed', (data) => console.log(data));
     newSocket.on('game_over', (payload) =>
       handleOnlineGameover(
         payload,
@@ -111,7 +110,6 @@ export const SocketProvider = ({ children }) => {
   };
 
   const checkMatch = (symbol) => {
-    console.log('sending data', gameId, symbol);
     socket.emit('check_match', { gameId, symbol });
   };
 

@@ -1,7 +1,7 @@
 import { useReducer } from 'react';
 import { loadDeck } from '../../utils/gameUtils';
-import gameModes from '../gameModes';
-import { preloadIcons } from '../../utils/iconUtils';
+import gameModes from '../../gameModes';
+import { preloadIcons } from '../../assets/icons';
 import NewGameContext from './NewGameContext';
 
 const initialState = {
