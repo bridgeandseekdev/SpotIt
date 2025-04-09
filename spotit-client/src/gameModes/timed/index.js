@@ -20,7 +20,7 @@ function stopTimer(draft) {
   draft.timer.duration = 0;
 }
 
-function handleInitialization({ state, deck, difficulty }) {
+function handleInitialization({ state, deck }) {
   return produce(state, (draft) => {
     draft.pileCard = deck.pop();
     draft.gameStatus = 'playing';
@@ -28,8 +28,8 @@ function handleInitialization({ state, deck, difficulty }) {
     draft.players.self.currentCard = deck[0];
     draft.players.self.score = 0;
     draft.timer.enabled = true;
-    draft.timer.duration = DIFFICULTY_CONFIGS[difficulty].timerSeconds;
-    draft.timer.remaining = DIFFICULTY_CONFIGS[difficulty].timerSeconds;
+    draft.timer.duration = DIFFICULTY_CONFIGS[draft.difficulty].timerSeconds;
+    draft.timer.remaining = DIFFICULTY_CONFIGS[draft.difficulty].timerSeconds;
   });
 }
 
@@ -45,6 +45,7 @@ function handleMatch({ state, symbol }) {
       draft.players.self.deck.shift();
       draft.players.self.currentCard =
         draft.players.self.deck.length > 0 ? draft.players.self.deck[0] : null;
+      draft.timer.remaining = draft.timer.duration; // Reset timer
       if (draft.players.self.deck.length === 0) {
         draft.gameStatus = 'game_over';
         stopTimer(draft);

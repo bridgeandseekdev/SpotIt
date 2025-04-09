@@ -84,7 +84,6 @@ export const NewGameProvider = ({ children }) => {
       const result = gameModes[currentMode].init({
         state: gameState,
         deck,
-        difficulty: currentDifficulty,
       });
       dispatch({ type: 'UPDATE_GAME_STATE', payload: result });
     } catch (error) {

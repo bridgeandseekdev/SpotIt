@@ -11,7 +11,7 @@ function GamePlay({ onlineCheckMatch }) {
   const {
     gameMode,
     difficulty,
-    offline: { gameStatus, player, opponent },
+    offline: { gameStatus },
     online: {
       gameStatus: onlineGameStatus,
       player: onlinePlayer,
@@ -21,7 +21,7 @@ function GamePlay({ onlineCheckMatch }) {
   const {
     gameState: {
       timer,
-      players: { self },
+      players: { self, opponent },
     },
   } = useNewGameContext();
   const navigate = useNavigate();
@@ -56,8 +56,8 @@ function GamePlay({ onlineCheckMatch }) {
                   <Layers className="w-5 h-5" />
                   <span>
                     {gameMode === 'bot'
-                      ? opponent.cardsRemaining
-                      : onlineOpponent.cardsRemaining}
+                      ? opponent.deck.length
+                      : onlineOpponent.deck.length}
                   </span>
                 </div>
               </div>
@@ -110,8 +110,8 @@ function GamePlay({ onlineCheckMatch }) {
                   <Layers className="w-5 h-5" />
                   <span>
                     {gameMode === 'online'
-                      ? onlinePlayer.cardsRemaining
-                      : player.cardsRemaining}
+                      ? onlinePlayer.deck.length
+                      : self.deck.length}
                   </span>
                 </div>
               </div>
