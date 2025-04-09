@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useGameContext } from '../../context';
+import { useGameContext, useNewGameContext } from '../../context';
 import { Gamepad, Timer, Bot, Users } from 'lucide-react';
 
 function MainMenu() {
@@ -11,9 +11,12 @@ function MainMenu() {
     resetGame,
   } = useGameContext();
 
+  const { setGameModeAction } = useNewGameContext();
+
   const handleModeSelection = (mode) => {
     resetGame();
     setGameMode(mode);
+    setGameModeAction(mode);
     if (mode === 'online') {
       navigate('/online/create');
       return;

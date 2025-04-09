@@ -1,3 +1,18 @@
+export const GAME_MODES = {
+  PRACTICE: 'practice',
+  TIMED: 'timed',
+  BOT: 'bot',
+  ONLINE: 'online',
+};
+
+export const GAME_STATUS = {
+  IDLE: 'idle',
+  PLAYING: 'playing',
+  STANDBY: 'stand_by',
+  GAME_OVER: 'game_over',
+  ERROR: 'error',
+};
+
 export const SCALE_VARIANTS = {
   SMALL: { mobile: { h: 'h-8', w: 'w-8' }, desktop: { h: 'h-12', w: 'w-12' } },
   MEDIUM: {
