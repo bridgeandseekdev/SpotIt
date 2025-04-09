@@ -1,21 +1,26 @@
-import { useGameContext } from '../../context';
-import { useCardMatching } from '../../hooks/useCardMatching';
+import { useGameContext, useNewGameContext } from '../../context';
 import Card from './Card';
 import QuitGameButton from './QuitGameButton';
 
 function PlayArea({ handleCheckMatch: handleOnlineCheckMatch }) {
   const {
     gameMode,
-    offline: { pileCard, player },
     online: { pileCard: OnlinePileCard, player: onlinePlayer },
   } = useGameContext();
-  const { checkMatch } = useCardMatching();
+
+  const {
+    handleMatchAction,
+    gameState: {
+      pileCard,
+      players: { self },
+    },
+  } = useNewGameContext();
 
   const handleSymbolClick = (symbol) => {
     if (handleOnlineCheckMatch) {
       handleOnlineCheckMatch(symbol);
     } else {
-      checkMatch(symbol);
+      handleMatchAction(symbol);
     }
   };
 
@@ -36,7 +41,7 @@ function PlayArea({ handleCheckMatch: handleOnlineCheckMatch }) {
             card={
               gameMode === 'online'
                 ? onlinePlayer.currentCard
-                : player.currentCard
+                : self.currentCard
             }
             type="player"
             onSymbolClick={handleSymbolClick}
