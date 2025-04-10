@@ -1,20 +1,22 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSocketContext } from '../../context';
+import { useNewGameContext, useSocketContext } from '../../context';
 import { useGameContext } from '../../context';
 import OnlineDifficultySelect from './OnlineDifficultySelect';
 
 function RoomHome() {
   const navigate = useNavigate();
-  const {
-    onlineState: { roomId, hostId, myPlayerId, players },
-    startGame,
-  } = useSocketContext();
+  const { startGame } = useSocketContext();
 
   const {
     difficulty,
     online: { gameId },
   } = useGameContext();
+
+  const { gameState } = useNewGameContext();
+  const {
+    socketConnection: { id, hostId, roomId, players },
+  } = gameState;
 
   useEffect(() => {
     if (gameId) {
@@ -46,7 +48,7 @@ function RoomHome() {
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-green-400"></div>
                 <span className="font-medium">
-                  {myPlayerId === id ? `You - ${username}` : username}
+                  {id === id ? `You - ${username}` : username}
                 </span>
               </div>
               {hostId === id && (
@@ -73,7 +75,7 @@ function RoomHome() {
         )}
 
         {players.length === 2 &&
-          (hostId === myPlayerId ? (
+          (hostId === id ? (
             <div className="space-y-10">
               <OnlineDifficultySelect />
               <button

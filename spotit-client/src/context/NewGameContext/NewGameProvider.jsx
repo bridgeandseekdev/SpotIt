@@ -3,6 +3,7 @@ import { loadDeck } from '../../utils/gameUtils';
 import gameModes from '../../gameModes';
 import { preloadIcons } from '../../assets/icons';
 import NewGameContext from './NewGameContext';
+import { produce } from 'immer';
 
 const initialState = {
   mode: null, //'practice' | 'timed' | 'bot' | 'online'
@@ -31,7 +32,6 @@ const initialState = {
     },
   },
   socketConnection: {
-    socket: null,
     id: null, // Player id aka socket connection id
     socketStatus: 'disconnected', // 'connected' | 'disconnected',
     roomId: null,
@@ -44,28 +44,45 @@ const initialState = {
 function gameReducer(state, action) {
   switch (action.type) {
     case 'SET_MODE':
-      return {
-        ...state,
-        mode: action.payload,
-      };
+      return produce(state, (draft) => {
+        draft.mode = action.payload;
+      });
     case 'SET_DIFFICULTY':
-      return {
-        ...state,
-        difficulty: action.payload,
-      };
+      return produce(state, (draft) => {
+        draft.difficulty = action.payload;
+      });
     case 'UPDATE_GAME_STATE':
       return {
         ...state,
-        ...action.payload,
+        ...action.payload, //produce/immer is used in the game mode plugins
       };
     case 'UPDATE_TIMER':
-      return {
-        ...state,
-        timer: {
-          ...state.timer,
-          remaining: action.payload,
-        },
-      };
+      return produce(state, (draft) => {
+        draft.timer.remaining = action.payload;
+      });
+    case 'NEW_SOCKET_CONNECTION':
+      return produce(state, (draft) => {
+        if (!draft.socketConnection.id) {
+          draft.socketConnection.socketStatus = 'connected';
+          draft.socketConnection.id = action.payload.id;
+        }
+      });
+    case 'ROOM_CREATED':
+      return produce(state, (draft) => {
+        draft.socketConnection.roomId = action.payload.roomId;
+        draft.socketConnection.hostId = action.payload.hostId;
+        draft.socketConnection.players = action.payload.players;
+      });
+    case 'ROOM_JOINED':
+      return produce(state, (draft) => {
+        draft.socketConnection.hostId = action.payload.hostId;
+        draft.socketConnection.roomId = action.payload.roomId;
+        draft.socketConnection.players.push(action.payload.player);
+      });
+    case 'OPPONENT_JOINED':
+      return produce(state, (draft) => {
+        draft.socketConnection.players = action.payload.players;
+      });
     default:
       return state;
   }
@@ -109,6 +126,22 @@ export const NewGameProvider = ({ children }) => {
     dispatch({ type: 'UPDATE_GAME_STATE', payload: result });
   };
 
+  const handleSocketConnection = (socket) => {
+    dispatch({ type: 'NEW_SOCKET_CONNECTION', payload: socket });
+  };
+
+  const handleRoomCreated = (payload) => {
+    dispatch({ type: 'ROOM_CREATED', payload });
+  };
+
+  const handleRoomJoined = (payload) => {
+    dispatch({ type: 'ROOM_JOINED', payload });
+  };
+
+  const handleOpponentJoined = (payload) => {
+    dispatch({ type: 'OPPONENT_JOINED', payload });
+  };
+
   const value = {
     gameState,
     setGameModeAction: (mode) => dispatch({ type: 'SET_MODE', payload: mode }),
@@ -119,6 +152,10 @@ export const NewGameProvider = ({ children }) => {
     updateTimerAction: (newTime) =>
       dispatch({ type: 'UPDATE_TIMER', payload: newTime }),
     handleTimerExpiredAction: handleTimerExpired,
+    handleSocketConnectionAction: handleSocketConnection,
+    handleRoomCreatedAction: handleRoomCreated,
+    handleRoomJoinedAction: handleRoomJoined,
+    handleOpponentJoinedAction: handleOpponentJoined,
   };
 
   return (

@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSocketContext } from '../../context';
+import { useSocketConnection } from '../../hooks/useSocketConnection';
 
 function CreateRoom() {
   const {
     createRoom,
-    joinRoom,
     onlineState: { roomId },
   } = useSocketContext();
+  const { createRoom: createRoomHook, joinRoom: joinRoomHook } =
+    useSocketConnection();
   const navigate = useNavigate();
 
   const [createName, setCreateName] = useState('');
@@ -29,12 +31,14 @@ function CreateRoom() {
   const handleCreate = () => {
     if (!validateInput(createName, 'Username')) return;
     createRoom({ username: createName });
+    createRoomHook({ username: createName });
   };
 
   const handleJoin = () => {
     if (!validateInput(joinCode, 'Room code')) return;
     if (!validateInput(joinName, 'Username')) return;
-    joinRoom({ roomId: joinCode, username: joinName });
+    joinRoomHook({ roomId: joinCode, username: joinName });
+    // joinRoom({ roomId: joinCode, username: joinName });
   };
 
   useEffect(() => {
