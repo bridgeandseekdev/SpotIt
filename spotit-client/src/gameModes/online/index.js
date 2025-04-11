@@ -1,6 +1,4 @@
 import { produce } from 'immer';
-// import { findMatchingSymbol } from "../../utils/gameUtils";
-// import { DIFFICULTY_CONFIGS } from "../../constants/gameConstants";
 
 const onlineMode = {
   config: {
@@ -8,16 +6,21 @@ const onlineMode = {
     needsTimer: false,
   },
   init: handleInitialization,
+  handleMatch,
+  handleGameOver,
 };
 
+export default onlineMode;
+
 function handleInitialization({ state, serverPayload }) {
-  const { gameId, pileCard, players, gameStatus } = serverPayload;
+  const { gameId, pileCard, players, gameStatus, difficulty } = serverPayload;
   const selfId = state.socketConnection.id;
   const opponentId = Object.keys(players).find((id) => id !== selfId);
   return produce(state, (draft) => {
     draft.socketConnection.gameId = gameId;
     draft.gameStatus = gameStatus;
     draft.pileCard = pileCard;
+    draft.difficulty = difficulty;
 
     draft.players.self.deck = players[selfId].deck;
     draft.players.self.currentCard = players[selfId].currentCard;
@@ -33,4 +36,27 @@ function handleInitialization({ state, serverPayload }) {
   });
 }
 
-export default onlineMode;
+function handleMatch({ state, serverPayload }) {
+  const { playerId, newPileCard, playerScore, nextPlayerCard, updatedDeck } =
+    serverPayload;
+
+  const whoseToUpdate =
+    state.socketConnection.id === playerId ? 'self' : 'opponent';
+  return produce(state, (draft) => {
+    draft.pileCard = newPileCard;
+    draft.players[whoseToUpdate].score = playerScore;
+    draft.players[whoseToUpdate].deck = updatedDeck;
+    draft.players[whoseToUpdate].currentCard = nextPlayerCard;
+  });
+}
+
+function handleGameOver({ state, serverPayload }) {
+  const { finalScores } = serverPayload;
+  const selfId = state.socketConnection.id;
+  const opponentId = Object.keys(finalScores).find((id) => id !== selfId);
+  return produce(state, (draft) => {
+    draft.gameStatus = 'game_over';
+    draft.players.self.score = finalScores[selfId];
+    draft.players.opponent.score = finalScores[opponentId];
+  });
+}

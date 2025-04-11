@@ -14,6 +14,8 @@ export const SocketProvider = ({ children }) => {
     handleOpponentJoinedAction,
     handleOnlineGameInitializedAction,
     handleOnlineGameStartedAction,
+    handleOnlineMatchSuccessAction,
+    handleOnlineGameOverAction,
   } = useNewGameContext();
 
   useEffect(() => {
@@ -42,6 +44,14 @@ export const SocketProvider = ({ children }) => {
     socket.on('game_started', (payload) =>
       handleOnlineGameStartedAction(payload),
     );
+
+    socket.on('match_success', (payload) =>
+      handleOnlineMatchSuccessAction(payload),
+    );
+
+    socket.on('game_over', (payload) => {
+      handleOnlineGameOverAction(payload);
+    });
 
     return () => {
       socket.disconnect();
@@ -74,10 +84,13 @@ export const SocketProvider = ({ children }) => {
     [socket],
   );
 
-  const startGame = useCallback(async (difficulty, roomId) => {
-    const deck = await loadDeck(difficulty);
-    socket.emit('initialize_game', { roomId, deck });
-  });
+  const startGame = useCallback(
+    async (difficulty, roomId) => {
+      const deck = await loadDeck(difficulty);
+      socket.emit('initialize_game', { roomId, deck, difficulty });
+    },
+    [socket],
+  );
 
   const startOnlineCountdown = (roomId, gameId) => {
     socket.emit('start_countdown', { roomId, gameId });

@@ -103,11 +103,7 @@ function GamePlay({ onlineCheckMatch }) {
                 </span>
                 <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
                   <Layers className="w-5 h-5" />
-                  <span>
-                    {mode === 'online'
-                      ? opponent.deck.length
-                      : self.deck.length}
-                  </span>
+                  <span>{self.deck.length}</span>
                 </div>
               </div>
             )}

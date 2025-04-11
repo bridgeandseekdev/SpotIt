@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom';
-import { useGameContext } from '../../context';
 import { DIFFICULTY_CONFIGS } from '../../constants/gameConstants';
 import { Trophy, Medal, Equal } from 'lucide-react';
 import Confetti from 'react-confetti';
 import { useEffect, useState } from 'react';
+import { useNewGameContext } from '../../context';
 
 function GameResult() {
   const [windowDimension, setWindowDimension] = useState({
@@ -12,15 +12,17 @@ function GameResult() {
   });
 
   const navigate = useNavigate();
+
   const {
-    gameMode,
-    offline: { player: offlinePlayer, opponent: offlineOpponent },
-    online: { player: onlinePlayer, opponent: onlineOpponent },
-    initializeGame,
-    resetGame,
-    difficulty,
-    resetOnlineGame,
-  } = useGameContext();
+    gameState: {
+      mode: gameMode,
+      difficulty,
+      players: { self, opponent },
+    },
+    initializeGameAction,
+    handleResetAction,
+    handleOnlineResetAction,
+  } = useNewGameContext();
   let totalScore;
 
   if (gameMode === 'timed') {
@@ -28,24 +30,23 @@ function GameResult() {
     totalScore = Math.pow(n, 2) + n;
   }
 
-  const handlePlayAgain = () => {
-    initializeGame();
+  const handlePlayAgain = async () => {
+    await initializeGameAction();
   };
 
   const handleBackToMenu = () => {
     if (gameMode === 'online') {
-      resetOnlineGame();
+      handleOnlineResetAction();
       navigate('/online');
     } else {
-      resetGame();
+      handleResetAction();
       navigate('/');
     }
   };
 
-  const player = gameMode === 'online' ? onlinePlayer : offlinePlayer;
-  const opponent = gameMode === 'online' ? onlineOpponent : offlineOpponent;
-
-  const showConfetti = gameMode === 'online' && player.score > opponent.score;
+  const showConfetti =
+    (gameMode === 'online' || gameMode === 'bot') &&
+    self.score > opponent.score;
 
   useEffect(() => {
     const handleResize = () => {
@@ -77,12 +78,12 @@ function GameResult() {
         {(gameMode === 'bot' || gameMode === 'online') && (
           <div className="text-center mb-8">
             <div className="text-2xl font-semibold mb-6">
-              {player.score > opponent.score ? (
+              {self.score > opponent.score ? (
                 <div className="flex items-center justify-center gap-2 text-yellow-500">
                   <Trophy className="text-3xl" size={24} />
                   <span>You Win!</span>
                 </div>
-              ) : player.score < opponent.score ? (
+              ) : self.score < opponent.score ? (
                 <div className="flex items-center justify-center gap-2 text-red-400">
                   <Medal className="text-3xl" size={24} />
                   <span>
@@ -103,8 +104,8 @@ function GameResult() {
               <div className="space-y-2 bg-white/5 rounded-lg p-4">
                 <h3 className="text-xl mb-3">Final Score:</h3>
                 <p className="text-lg">
-                  {player.username}:{' '}
-                  <span className="font-bold">{player.score}</span>
+                  {self.username}:{' '}
+                  <span className="font-bold">{self.score}</span>
                 </p>
                 <p className="text-lg">
                   {opponent.username}:{' '}
@@ -117,7 +118,7 @@ function GameResult() {
               <div className="space-y-2 bg-white/5 rounded-lg p-4">
                 <h3 className="text-xl mb-3">Final Score:</h3>
                 <p className="text-lg">
-                  You: <span className="font-bold">{player.score}</span>
+                  You: <span className="font-bold">{self.score}</span>
                 </p>
                 <p className="text-lg">
                   Bot: <span className="font-bold">{opponent.score}</span>
@@ -131,7 +132,7 @@ function GameResult() {
           <div className="text-center mb-8">
             <h2 className="text-2xl font-semibold mb-4">
               Final Score:{' '}
-              <span className="text-yellow-700 font-bold">{player.score}</span>
+              <span className="text-yellow-700 font-bold">{self.score}</span>
               <span className="text-sm"> / {totalScore}</span>
             </h2>
           </div>

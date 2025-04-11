@@ -9,12 +9,13 @@ function PlayArea({ handleCheckMatch: handleOnlineCheckMatch }) {
       mode,
       pileCard,
       players: { self },
+      socketConnection: { gameId },
     },
   } = useNewGameContext();
 
   const handleSymbolClick = (symbol) => {
     if (handleOnlineCheckMatch) {
-      handleOnlineCheckMatch(symbol);
+      handleOnlineCheckMatch(gameId, symbol);
     } else {
       handleMatchAction(symbol);
     }

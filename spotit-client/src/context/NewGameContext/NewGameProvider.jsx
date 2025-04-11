@@ -90,6 +90,26 @@ function gameReducer(state, action) {
           draft.gameStatus = 'playing';
         }
       });
+    case 'RESET_GAME':
+      return produce(state, (draft) => {
+        draft.mode = initialState.mode;
+        draft.gameStatus = initialState.gameStatus;
+        draft.pileCard = initialState.pileCard;
+        draft.difficulty = initialState.difficulty;
+        draft.timer = initialState.timer;
+        draft.players.self = initialState.players.self;
+        draft.players.opponent = initialState.players.opponent;
+        draft.socketConnection = initialState.socketConnection;
+      });
+    case 'RESET_ONLINE_GAME':
+      return produce(state, (draft) => {
+        draft.gameStatus = initialState.gameStatus;
+        draft.pileCard = initialState.pileCard;
+        draft.players.self = initialState.players.self;
+        draft.players.opponent = initialState.players.opponent;
+        draft.socketConnection.gameId = initialState.socketConnection.gameId;
+      });
+
     default:
       return state;
   }
@@ -167,6 +187,26 @@ export const NewGameProvider = ({ children }) => {
     dispatch({ type: 'UPDATE_GAME_STATE', payload: result });
   };
 
+  const handleOnlineMatch = (payload) => {
+    const currentMode = gameState.mode;
+    const currentState = gameStateRef.current;
+    const result = gameModes[currentMode].handleMatch({
+      state: currentState,
+      serverPayload: payload,
+    });
+    dispatch({ type: 'UPDATE_GAME_STATE', payload: result });
+  };
+
+  const handleOnlineGameOver = (payload) => {
+    const currentMode = gameState.mode;
+    const currentState = gameStateRef.current;
+    const result = gameModes[currentMode].handleGameOver({
+      state: currentState,
+      serverPayload: payload,
+    });
+    dispatch({ type: 'UPDATE_GAME_STATE', payload: result });
+  };
+
   const value = {
     gameState,
     setGameModeAction: (mode) => dispatch({ type: 'SET_MODE', payload: mode }),
@@ -184,6 +224,10 @@ export const NewGameProvider = ({ children }) => {
     handleOnlineGameInitializedAction: handleOnlineGameInitialized,
     handleOnlineGameStartedAction: (payload) =>
       dispatch({ type: 'ONLINE_GAME_STARTED', payload }),
+    handleOnlineMatchSuccessAction: handleOnlineMatch,
+    handleOnlineGameOverAction: handleOnlineGameOver,
+    handleResetAction: () => dispatch({ type: 'RESET_GAME' }),
+    handleOnlineResetAction: () => dispatch({ type: 'RESET_ONLINE_GAME' }),
   };
 
   return (

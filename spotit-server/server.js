@@ -78,7 +78,7 @@ io.on('connection', (socket) => {
     });
   });
   //start game(initialized with the frontend generated deck)
-  socket.on('initialize_game', ({ roomId, deck }) => {
+  socket.on('initialize_game', ({ roomId, deck, difficulty }) => {
     console.log('initialization request', roomId, deck.length);
 
     const room = rooms[roomId];
@@ -134,6 +134,7 @@ io.on('connection', (socket) => {
       players: games[gameId].players,
       gameStatus: games[gameId].gameStatus,
       deck,
+      difficulty,
     });
 
     io.to(roomId).emit('game_initialized', {
@@ -142,6 +143,7 @@ io.on('connection', (socket) => {
       players: games[gameId].players,
       gameStatus: games[gameId].gameStatus,
       deck,
+      difficulty,
     });
   });
 
@@ -171,7 +173,7 @@ io.on('connection', (socket) => {
   //Handle match attempt
   socket.on('check_match', ({ gameId, symbol }) => {
     const game = games[gameId];
-    console.log('match attempt for game', game);
+    console.log('match attempt for game', gameId, symbol);
     const room = rooms[game.roomId];
     if (!room) {
       return socket.emit('error', { message: 'Room not found' });
@@ -229,7 +231,6 @@ io.on('connection', (socket) => {
     const request = game.pileCardMatchQueue.shift();
     const { playerId, symbol } = request;
     const playerData = game.players[playerId];
-    console.log('player data', playerData);
 
     if (!playerData) {
       //skip invalid requests
@@ -241,9 +242,7 @@ io.on('connection', (socket) => {
     }
 
     const playerCurrentCard = playerData.currentCard;
-    console.log('playerCurrentCard', playerCurrentCard);
     const pileCard = game.pileCard;
-    console.log('pileCard', pileCard);
 
     //Check if the chosen symbol exists in both cards
     const isMatch = pileCard.some((card) => card.symbol === symbol);
@@ -285,15 +284,13 @@ io.on('connection', (socket) => {
         });
       } else {
         // Player has finished their deck - they win!
-        game.gameStatus = 'gameOver';
-        game.winner = playerId;
+        game.gameStatus = 'game_over';
 
         const otherPlayerId = Object.keys(game.players).find(
           (id) => id !== playerId,
         );
 
         io.to(game.roomId).emit('game_over', {
-          winner: playerId,
           finalScores: {
             [playerId]: game.players[playerId].score,
             [otherPlayerId]: game.players[otherPlayerId].score,
