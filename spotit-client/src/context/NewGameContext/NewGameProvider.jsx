@@ -62,10 +62,8 @@ function gameReducer(state, action) {
       });
     case 'NEW_SOCKET_CONNECTION':
       return produce(state, (draft) => {
-        if (!draft.socketConnection.id) {
-          draft.socketConnection.socketStatus = 'connected';
-          draft.socketConnection.id = action.payload.id;
-        }
+        draft.socketConnection.socketStatus = 'connected';
+        draft.socketConnection.id = action.payload.id;
       });
     case 'ROOM_CREATED':
       return produce(state, (draft) => {

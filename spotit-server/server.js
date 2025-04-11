@@ -37,6 +37,9 @@ io.on('connection', (socket) => {
     };
 
     socket.join(roomId);
+    console.log(
+      `room created for connection id: ${socket.id}, room id: ${roomId}`,
+    );
     socket.emit('room_created', { roomInfo: rooms[roomId], roomId });
   });
 
@@ -60,12 +63,16 @@ io.on('connection', (socket) => {
     room.players.push(player);
 
     socket.join(roomId);
+    console.log(
+      `room joined by connection id: ${socket.id}, room id: ${roomId}`,
+    );
     socket.emit('room_joined', {
       player,
       roomId,
       hostId: room.hostId,
     });
 
+    console.log('----players', room.players);
     io.to(roomId).emit('player_joined', {
       players: room.players,
     });

@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSocketContext } from '../../context';
-import { useSocketConnection } from '../../hooks/useSocketConnection';
+import { useNewGameContext, useSocketContext } from '../../context';
 
 function CreateRoom() {
   const {
-    createRoom,
-    onlineState: { roomId },
-  } = useSocketContext();
+    gameState: {
+      socketConnection: { roomId },
+    },
+  } = useNewGameContext();
   const { createRoom: createRoomHook, joinRoom: joinRoomHook } =
-    useSocketConnection();
+    useSocketContext();
   const navigate = useNavigate();
 
   const [createName, setCreateName] = useState('');
@@ -30,7 +30,6 @@ function CreateRoom() {
 
   const handleCreate = () => {
     if (!validateInput(createName, 'Username')) return;
-    createRoom({ username: createName });
     createRoomHook({ username: createName });
   };
 

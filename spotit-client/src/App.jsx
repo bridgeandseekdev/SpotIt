@@ -1,7 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { GameProvider, NewGameProvider } from './context';
-import { SocketProvider } from './context';
+import { GameProvider, NewGameProvider, SocketProvider } from './context';
 import MainMenu from './components/pages/MainMenu';
 import DifficultySelect from './components/pages/DifficultySelect';
 import OnlineRouter from './components/online/OnlineRouter';

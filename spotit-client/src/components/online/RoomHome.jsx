@@ -1,12 +1,11 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useNewGameContext, useSocketContext } from '../../context';
+import { useNewGameContext } from '../../context';
 import { useGameContext } from '../../context';
 import OnlineDifficultySelect from './OnlineDifficultySelect';
 
 function RoomHome() {
   const navigate = useNavigate();
-  const { startGame } = useSocketContext();
 
   const {
     difficulty,
@@ -29,7 +28,7 @@ function RoomHome() {
       alert('Please select difficulty first!');
       return;
     }
-    startGame();
+    // startGame();
   };
 
   return (
