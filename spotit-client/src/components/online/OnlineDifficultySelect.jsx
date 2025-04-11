@@ -1,10 +1,13 @@
-import { useGameContext } from '../../context';
+import { useNewGameContext } from '../../context';
 
 function OnlineDifficultySelect() {
-  const { setDifficulty, difficulty } = useGameContext();
+  const {
+    setDifficultyAction,
+    gameState: { difficulty },
+  } = useNewGameContext();
 
   const handleDifficultySelection = (difficulty) => {
-    setDifficulty(difficulty);
+    setDifficultyAction(difficulty);
   };
 
   return (

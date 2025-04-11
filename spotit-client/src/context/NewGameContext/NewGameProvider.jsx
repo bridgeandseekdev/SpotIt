@@ -1,4 +1,4 @@
-import { useReducer } from 'react';
+import { useEffect, useReducer, useRef } from 'react';
 import { loadDeck } from '../../utils/gameUtils';
 import gameModes from '../../gameModes';
 import { preloadIcons } from '../../assets/icons';
@@ -81,6 +81,15 @@ function gameReducer(state, action) {
       return produce(state, (draft) => {
         draft.socketConnection.players = action.payload.players;
       });
+    case 'ONLINE_GAME_STARTED':
+      return produce(state, (draft) => {
+        if (
+          draft.socketConnection.gameId === action.payload.gameId &&
+          draft.gameStatus != 'playing'
+        ) {
+          draft.gameStatus = 'playing';
+        }
+      });
     default:
       return state;
   }
@@ -88,16 +97,22 @@ function gameReducer(state, action) {
 
 export const NewGameProvider = ({ children }) => {
   const [gameState, dispatch] = useReducer(gameReducer, initialState);
+  const gameStateRef = useRef(gameState);
+
+  useEffect(() => {
+    gameStateRef.current = gameState;
+  }, [gameState]);
 
   const initializeGame = async () => {
     const currentMode = gameState.mode;
     const currentDifficulty = gameState.difficulty;
+    const currentState = gameStateRef.current;
     try {
       const deck = await loadDeck(currentDifficulty);
       const uniqueSymbols = [...new Set(deck.flat().map((obj) => obj.symbol))];
       await preloadIcons(uniqueSymbols);
       const result = gameModes[currentMode].init({
-        state: gameState,
+        state: currentState,
         deck,
       });
       dispatch({ type: 'UPDATE_GAME_STATE', payload: result });
@@ -109,8 +124,9 @@ export const NewGameProvider = ({ children }) => {
 
   const handleMatch = (symbol) => {
     const currentMode = gameState.mode;
+    const currentState = gameStateRef.current;
     const result = gameModes[currentMode].handleMatch({
-      state: gameState,
+      state: currentState,
       symbol,
     });
     dispatch({ type: 'UPDATE_GAME_STATE', payload: result });
@@ -118,8 +134,9 @@ export const NewGameProvider = ({ children }) => {
 
   const handleTimerExpired = () => {
     const currentMode = gameState.mode;
+    const currentState = gameStateRef.current;
     const result = gameModes[currentMode].handleTimerExpiry({
-      state: gameState,
+      state: currentState,
     });
     dispatch({ type: 'UPDATE_GAME_STATE', payload: result });
   };
@@ -140,6 +157,16 @@ export const NewGameProvider = ({ children }) => {
     dispatch({ type: 'OPPONENT_JOINED', payload });
   };
 
+  const handleOnlineGameInitialized = (payload) => {
+    const currentMode = gameState.mode;
+    const currentState = gameStateRef.current;
+    const result = gameModes[currentMode].init({
+      state: currentState,
+      serverPayload: payload,
+    });
+    dispatch({ type: 'UPDATE_GAME_STATE', payload: result });
+  };
+
   const value = {
     gameState,
     setGameModeAction: (mode) => dispatch({ type: 'SET_MODE', payload: mode }),
@@ -154,6 +181,9 @@ export const NewGameProvider = ({ children }) => {
     handleRoomCreatedAction: handleRoomCreated,
     handleRoomJoinedAction: handleRoomJoined,
     handleOpponentJoinedAction: handleOpponentJoined,
+    handleOnlineGameInitializedAction: handleOnlineGameInitialized,
+    handleOnlineGameStartedAction: (payload) =>
+      dispatch({ type: 'ONLINE_GAME_STARTED', payload }),
   };
 
   return (

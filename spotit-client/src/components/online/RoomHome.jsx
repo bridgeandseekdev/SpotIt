@@ -1,20 +1,16 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useNewGameContext } from '../../context';
-import { useGameContext } from '../../context';
+import { useNewGameContext, useSocketContext } from '../../context';
 import OnlineDifficultySelect from './OnlineDifficultySelect';
 
 function RoomHome() {
   const navigate = useNavigate();
 
-  const {
-    difficulty,
-    online: { gameId },
-  } = useGameContext();
-
   const { gameState } = useNewGameContext();
+  const { startGame } = useSocketContext();
   const {
-    socketConnection: { id, hostId, roomId, players },
+    socketConnection: { id, hostId, roomId, players, gameId },
+    difficulty,
   } = gameState;
 
   useEffect(() => {
@@ -28,7 +24,7 @@ function RoomHome() {
       alert('Please select difficulty first!');
       return;
     }
-    // startGame();
+    startGame(difficulty, roomId);
   };
 
   return (

@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import SocketContext from './SocketContext';
 import { useNewGameContext } from '../../context';
+import { loadDeck } from '../../utils/gameUtils';
+import { preloadIcons } from '../../assets/icons';
 
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
@@ -10,6 +12,8 @@ export const SocketProvider = ({ children }) => {
     handleRoomCreatedAction,
     handleRoomJoinedAction,
     handleOpponentJoinedAction,
+    handleOnlineGameInitializedAction,
+    handleOnlineGameStartedAction,
   } = useNewGameContext();
 
   useEffect(() => {
@@ -26,6 +30,18 @@ export const SocketProvider = ({ children }) => {
     socket.on('room_joined', handleRoomJoined);
 
     socket.on('player_joined', handlePlayerJoined);
+
+    socket.on('game_initialized', async (payload) => {
+      const uniqueSymbols = [
+        ...new Set(payload.deck.flat().map((obj) => obj.symbol)),
+      ];
+      await preloadIcons(uniqueSymbols);
+      handleOnlineGameInitializedAction(payload);
+    });
+
+    socket.on('game_started', (payload) =>
+      handleOnlineGameStartedAction(payload),
+    );
 
     return () => {
       socket.disconnect();
@@ -58,6 +74,19 @@ export const SocketProvider = ({ children }) => {
     [socket],
   );
 
+  const startGame = useCallback(async (difficulty, roomId) => {
+    const deck = await loadDeck(difficulty);
+    socket.emit('initialize_game', { roomId, deck });
+  });
+
+  const startOnlineCountdown = (roomId, gameId) => {
+    socket.emit('start_countdown', { roomId, gameId });
+  };
+
+  const checkMatch = (gameId, symbol) => {
+    socket.emit('check_match', { gameId, symbol });
+  };
+
   // const resetSocket = () => {
   //   setSocket(null);
   //   setOnlineState(initialState);
@@ -69,6 +98,9 @@ export const SocketProvider = ({ children }) => {
         createRoom,
         joinRoom,
         isConnected: socket && socket.connected,
+        startGame,
+        startOnlineCountdown,
+        checkMatch,
       }}
     >
       {children}

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useGameContext, useNewGameContext } from '../../context';
+import { useNewGameContext } from '../../context';
 import PlayArea from '../common/PlayArea';
 import GameResult from './GameResult';
 import { useTimerEffect } from '../../hooks/useTimerEffect';
@@ -9,17 +9,10 @@ import { DIFFICULTY_CONFIGS } from '../../constants/gameConstants';
 
 function GamePlay({ onlineCheckMatch }) {
   const {
-    gameMode,
-    difficulty,
-    offline: { gameStatus },
-    online: {
-      gameStatus: onlineGameStatus,
-      player: onlinePlayer,
-      opponent: onlineOpponent,
-    },
-  } = useGameContext();
-  const {
     gameState: {
+      mode,
+      gameStatus,
+      difficulty,
       timer,
       players: { self, opponent },
     },
@@ -29,12 +22,12 @@ function GamePlay({ onlineCheckMatch }) {
   useTimerEffect();
 
   useEffect(() => {
-    if (!gameMode) {
+    if (!mode) {
       navigate('/');
     }
-  }, [gameMode, navigate]);
+  }, [mode, navigate]);
 
-  switch (gameMode === 'online' ? onlineGameStatus : gameStatus) {
+  switch (gameStatus) {
     case 'idle':
     case 'initializing':
       return (
@@ -42,23 +35,25 @@ function GamePlay({ onlineCheckMatch }) {
           <div className="text-xl">Loading...</div>
         </div>
       );
+    case 'stand_by':
+      return (
+        <div className="flex items-center justify-center h-[100dvh]">
+          <div className="text-xl">Get ready..starting game...</div>
+        </div>
+      );
     case 'playing':
       return (
         <div className="h-[100dvh] flex flex-col overflow-hidden">
-          {(gameMode === 'bot' || gameMode === 'online') && (
+          {(mode === 'bot' || mode === 'online') && (
             <div className="h-[10vh] flex shrink-0 items-center justify-center bg-gray-50 dark:bg-gray-800 border-b dark:border-gray-700">
               <div className="flex items-center gap-4">
                 <User2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                 <span className="font-medium">
-                  {gameMode === 'online' ? onlineOpponent.username : 'Bot'}
+                  {mode === 'online' ? opponent.username : 'Bot'}
                 </span>
                 <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
                   <Layers className="w-5 h-5" />
-                  <span>
-                    {gameMode === 'bot'
-                      ? opponent.deck.length
-                      : onlineOpponent.deck.length}
-                  </span>
+                  <span>{opponent.deck.length}</span>
                 </div>
               </div>
             </div>
@@ -66,18 +61,16 @@ function GamePlay({ onlineCheckMatch }) {
 
           <div className="flex-1 flex flex-col justify-center items-center overflow-hidden relative">
             <PlayArea
-              handleCheckMatch={gameMode === 'online' ? onlineCheckMatch : null}
+              handleCheckMatch={mode === 'online' ? onlineCheckMatch : null}
             />
           </div>
 
           <div
             className={`h-16 flex items-center justify-center bg-gray-50 dark:bg-gray-800 border-t dark:border-gray-700 ${
-              timer.remaining <= 3 && gameMode === 'timed'
-                ? 'animate-shake'
-                : ''
+              timer.remaining <= 3 && mode === 'timed' ? 'animate-shake' : ''
             }`}
           >
-            {gameMode === 'timed' ? (
+            {mode === 'timed' ? (
               <div className="flex items-center gap-4 relative">
                 <div
                   className={`${
@@ -105,12 +98,14 @@ function GamePlay({ onlineCheckMatch }) {
             ) : (
               <div className="flex items-center gap-4">
                 <User2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                <span className="font-medium">You</span>
+                <span className="font-medium">
+                  {mode === 'online' ? self.username : 'You'}
+                </span>
                 <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
                   <Layers className="w-5 h-5" />
                   <span>
-                    {gameMode === 'online'
-                      ? onlinePlayer.deck.length
+                    {mode === 'online'
+                      ? opponent.deck.length
                       : self.deck.length}
                   </span>
                 </div>

@@ -79,7 +79,7 @@ io.on('connection', (socket) => {
   });
   //start game(initialized with the frontend generated deck)
   socket.on('initialize_game', ({ roomId, deck }) => {
-    console.log('initialization request');
+    console.log('initialization request', roomId, deck.length);
 
     const room = rooms[roomId];
 
@@ -103,7 +103,7 @@ io.on('connection', (socket) => {
     const gameId = uuidv4();
     games[gameId] = {
       roomId,
-      gameStatus: 'idle',
+      gameStatus: 'stand_by',
       startedAt: Date.now(),
       pileCard,
       pileCardMatchQueue: [],
@@ -115,6 +115,7 @@ io.on('connection', (socket) => {
           score: 0,
           cardsRemaining: player1Deck.length,
           username: room.players[0].username,
+          id: room.players[0].id,
         },
         [room.players[1].id]: {
           deck: player2Deck,
@@ -122,15 +123,25 @@ io.on('connection', (socket) => {
           score: 0,
           cardsRemaining: player2Deck.length,
           username: room.players[1].username,
+          id: room.players[1].id,
         },
       },
     };
+
+    console.log('game_initialized', {
+      gameId,
+      pileCard,
+      players: games[gameId].players,
+      gameStatus: games[gameId].gameStatus,
+      deck,
+    });
 
     io.to(roomId).emit('game_initialized', {
       gameId,
       pileCard,
       players: games[gameId].players,
       gameStatus: games[gameId].gameStatus,
+      deck,
     });
   });
 
@@ -152,7 +163,7 @@ io.on('connection', (socket) => {
       if (countdown <= 0) {
         clearInterval(intervalId); // Stop the interval
         games[gameId].gameStatus = 'playing';
-        io.to(roomId).emit('game_started'); // Tell clients game is starting
+        io.to(roomId).emit('game_started', { gameId }); // Tell clients game is starting
       }
     }, 1000); // Run every second
   });
@@ -160,7 +171,7 @@ io.on('connection', (socket) => {
   //Handle match attempt
   socket.on('check_match', ({ gameId, symbol }) => {
     const game = games[gameId];
-    console.log('game', game);
+    console.log('match attempt for game', game);
     const room = rooms[game.roomId];
     if (!room) {
       return socket.emit('error', { message: 'Room not found' });

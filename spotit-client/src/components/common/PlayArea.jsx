@@ -1,16 +1,12 @@
-import { useGameContext, useNewGameContext } from '../../context';
+import { useNewGameContext } from '../../context';
 import Card from './Card';
 import QuitGameButton from './QuitGameButton';
 
 function PlayArea({ handleCheckMatch: handleOnlineCheckMatch }) {
   const {
-    gameMode,
-    online: { pileCard: OnlinePileCard, player: onlinePlayer },
-  } = useGameContext();
-
-  const {
     handleMatchAction,
     gameState: {
+      mode,
       pileCard,
       players: { self },
     },
@@ -28,27 +24,19 @@ function PlayArea({ handleCheckMatch: handleOnlineCheckMatch }) {
     <div className="h-full w-full flex flex-col justify-center p-4 mt-10 gap-4">
       <div className="h-[45%] w-full flex justify-center p-[2%] md:p-2">
         <div className="h-full max-w-full rounded-full aspect-square">
-          <Card
-            card={gameMode === 'online' ? OnlinePileCard : pileCard}
-            type="pile"
-            onSymbolClick={() => {}}
-          />
+          <Card card={pileCard} type="pile" onSymbolClick={() => {}} />
         </div>
       </div>
       <div className="h-[55%] w-full flex justify-center p-[3%] md:p-2">
         <div className="h-full max-w-full rounded-full aspect-square">
           <Card
-            card={
-              gameMode === 'online'
-                ? onlinePlayer.currentCard
-                : self.currentCard
-            }
+            card={self.currentCard}
             type="player"
             onSymbolClick={handleSymbolClick}
           />
         </div>
       </div>
-      {gameMode !== 'online' ? <QuitGameButton /> : null}
+      {mode !== 'online' ? <QuitGameButton /> : null}
     </div>
   );
 }
