@@ -36,9 +36,6 @@ function PlayArea({ handleCheckMatch: handleOnlineCheckMatch }) {
     const pileRect = pileCardRef.current.getBoundingClientRect();
     const currentRect = currentCardRef.current.getBoundingClientRect();
 
-    // Calculate scale ratio between pile and current card
-    const scaleRatio = pileRect.width / currentRect.width;
-
     const dx =
       pileRect.left +
       pileRect.width / 2 -
@@ -50,7 +47,6 @@ function PlayArea({ handleCheckMatch: handleOnlineCheckMatch }) {
 
     return {
       transform: `translate(${dx}px, ${dy}px)`,
-      scaleRatio,
     };
   };
 
@@ -60,6 +56,7 @@ function PlayArea({ handleCheckMatch: handleOnlineCheckMatch }) {
         <motion.div
           ref={pileCardRef}
           className="h-full max-w-full rounded-full aspect-square"
+          style={{ zIndex: 10, opacity: isAnimating ? 0 : 1 }}
         >
           <Card card={pileCard} type="pile" onSymbolClick={() => {}} />
         </motion.div>
@@ -71,22 +68,23 @@ function PlayArea({ handleCheckMatch: handleOnlineCheckMatch }) {
             width: currentCardRef.current?.offsetWidth,
             left: currentCardRef.current?.offsetLeft,
             top: currentCardRef.current?.offsetTop,
+            zIndex: 20,
           }}
           initial={{
             transform: 'translate(0, 0)',
             rotate: 0,
-            scale: 1,
-            opacity: 1,
+            scale: 0.8,
+            opacity: 0.5,
           }}
           animate={{
             transform: getCardPositions()?.transform || 'translate(0, 0)',
             rotate: -3,
-            scale: getCardPositions()?.scaleRatio || 1,
+            scale: 0.5,
             opacity: 1,
           }}
           transition={{
-            duration: 0.5,
-            ease: [0.4, 0, 0.2, 1], // Custom easing for smoother animation
+            duration: 0.25,
+            ease: [0, 0, 1, 1], // Custom easing for smoother animation
           }}
         >
           <Card card={animatingCard} type="player" onSymbolClick={() => {}} />
@@ -96,6 +94,7 @@ function PlayArea({ handleCheckMatch: handleOnlineCheckMatch }) {
         <motion.div
           ref={currentCardRef}
           className="h-full max-w-full rounded-full aspect-square"
+          style={{ zIndex: 5 }}
         >
           <Card
             card={self.currentCard}

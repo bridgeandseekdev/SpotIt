@@ -20,7 +20,7 @@ export function useCardAnimation(pileCard, currentCard) {
       timeoutRef.current = setTimeout(() => {
         setIsAnimating(false);
         setAnimatingCard(null);
-      }, 500); // match duration with animation
+      }, 250); // match duration with animation
     }
 
     prevCurrentCardRef.current = currentCard;
