@@ -1,21 +1,20 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useGameContext, useNewGameContext } from '../../context';
+import { useNewGameContext } from '../../context';
 import { Gamepad, Timer, Bot, Users } from 'lucide-react';
 
 function MainMenu() {
   const navigate = useNavigate();
-  const {
-    setGameMode,
-    offline: { gameStatus },
-    resetGame,
-  } = useGameContext();
 
-  const { setGameModeAction } = useNewGameContext();
+  const {
+    setGameModeAction,
+    gameState: { gameStatus },
+    handleResetAction,
+  } = useNewGameContext();
 
   const handleModeSelection = (mode) => {
-    resetGame();
-    setGameMode(mode);
+    handleResetAction();
+    setGameModeAction(mode);
     setGameModeAction(mode);
     if (mode === 'online') {
       navigate('/online/create');
@@ -26,9 +25,9 @@ function MainMenu() {
 
   useEffect(() => {
     if (gameStatus !== 'idle') {
-      resetGame();
+      handleResetAction();
     }
-  }, [gameStatus, resetGame]);
+  }, [gameStatus, handleResetAction]);
 
   return (
     <div className="max-w-md md:max-w-6xl mx-auto py-10">
