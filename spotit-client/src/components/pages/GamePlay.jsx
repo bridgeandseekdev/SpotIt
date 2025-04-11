@@ -4,8 +4,10 @@ import { useNewGameContext } from '../../context';
 import PlayArea from '../common/PlayArea';
 import GameResult from './GameResult';
 import { useTimerEffect } from '../../hooks/useTimerEffect';
-import { Layers, User2, Timer } from 'lucide-react';
-import { DIFFICULTY_CONFIGS } from '../../constants/gameConstants';
+import OpponentSection from '../game/OpponentSection';
+import PlayerSection from '../game/PlayerSection';
+import gameModes from '../../gameModes';
+import QuitGameButton from '../common/QuitGameButton';
 
 function GamePlay({ onlineCheckMatch }) {
   const {
@@ -18,13 +20,12 @@ function GamePlay({ onlineCheckMatch }) {
     },
   } = useNewGameContext();
   const navigate = useNavigate();
+  const currentMode = gameModes[mode];
 
   useTimerEffect();
 
   useEffect(() => {
-    if (!mode) {
-      navigate('/');
-    }
+    if (!mode) navigate('/');
   }, [mode, navigate]);
 
   switch (gameStatus) {
@@ -44,69 +45,21 @@ function GamePlay({ onlineCheckMatch }) {
     case 'playing':
       return (
         <div className="h-[100dvh] flex flex-col overflow-hidden">
-          {(mode === 'bot' || mode === 'online') && (
-            <div className="h-[10vh] flex shrink-0 items-center justify-center bg-gray-50 dark:bg-gray-800 border-b dark:border-gray-700">
-              <div className="flex items-center gap-4">
-                <User2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                <span className="font-medium">
-                  {mode === 'online' ? opponent.username : 'Bot'}
-                </span>
-                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-                  <Layers className="w-5 h-5" />
-                  <span>{opponent.deck.length}</span>
-                </div>
-              </div>
-            </div>
+          {currentMode.config.needsOpponent && (
+            <OpponentSection opponent={opponent} />
           )}
-
           <div className="flex-1 flex flex-col justify-center items-center overflow-hidden relative">
             <PlayArea
               handleCheckMatch={mode === 'online' ? onlineCheckMatch : null}
             />
           </div>
-
-          <div
-            className={`h-16 flex items-center justify-center bg-gray-50 dark:bg-gray-800 border-t dark:border-gray-700 ${
-              timer.remaining <= 3 && mode === 'timed' ? 'animate-shake' : ''
-            }`}
-          >
-            {mode === 'timed' ? (
-              <div className="flex items-center gap-4 relative">
-                <div
-                  className={`${
-                    timer.remaining <= 3 ? 'bg-red-400' : 'bg-green-400'
-                  } h-1 transition-all duration-1000 ease-linear fixed bottom-0 left-0 right-0 mx-auto w-[70%]`}
-                  style={{
-                    width: `${
-                      (timer.remaining /
-                        DIFFICULTY_CONFIGS[difficulty].timerSeconds) *
-                      100
-                    }%`,
-                  }}
-                ></div>
-                <div className="flex items-center gap-2">
-                  <Timer className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                  <span className="px-3 py-1 bg-gray-200 dark:bg-gray-700 rounded-full">
-                    {timer.remaining}s
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-                  <Layers className="w-5 h-5" />
-                  <span>{self.deck.length}</span>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center gap-4">
-                <User2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-                <span className="font-medium">
-                  {mode === 'online' ? self.username : 'You'}
-                </span>
-                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
-                  <Layers className="w-5 h-5" />
-                  <span>{self.deck.length}</span>
-                </div>
-              </div>
-            )}
+          <div className="flex flex-col">
+            <PlayerSection
+              player={self}
+              timer={currentMode.config.needsTimer ? timer : null}
+              difficulty={difficulty}
+            />
+            {mode !== 'online' && <QuitGameButton />}
           </div>
         </div>
       );

@@ -1,12 +1,10 @@
 import { useNewGameContext } from '../../context';
 import Card from './Card';
-import QuitGameButton from './QuitGameButton';
 
 function PlayArea({ handleCheckMatch: handleOnlineCheckMatch }) {
   const {
     handleMatchAction,
     gameState: {
-      mode,
       pileCard,
       players: { self },
       socketConnection: { gameId },
@@ -37,7 +35,6 @@ function PlayArea({ handleCheckMatch: handleOnlineCheckMatch }) {
           />
         </div>
       </div>
-      {mode !== 'online' ? <QuitGameButton /> : null}
     </div>
   );
 }
