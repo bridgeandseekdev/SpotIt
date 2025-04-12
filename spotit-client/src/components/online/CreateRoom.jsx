@@ -5,7 +5,7 @@ import { useNewGameContext, useSocketContext } from '../../context';
 function CreateRoom() {
   const {
     gameState: {
-      socketConnection: { roomId },
+      socketConnection: { roomId, id },
     },
   } = useNewGameContext();
   const { createRoom: createRoomHook, joinRoom: joinRoomHook } =
@@ -47,7 +47,23 @@ function CreateRoom() {
   return (
     <div className="flex flex-col justify-center items-center h-screen">
       <div className="flex flex-col gap-8 items-center border border-neutral-50/20 bg-bg-tertiary dark:bg-bg-dark-secondary p-8 rounded-xl shadow-lg w-96">
-        <div className="flex flex-col gap-4 items-center w-full">
+        <div
+          className="relative flex flex-col gap-4 items-center w-full"
+          title="Establishing server connection"
+        >
+          {!id ? (
+            <div
+              className="absolute top-0 right-0"
+              title="Establishing server connection"
+            >
+              <div className="relative">
+                <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-blue-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+              </div>
+            </div>
+          ) : (
+            <span className="absolute top-0 right-0 inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+          )}
           <h1 className="text-2xl font-bold text-text-accent2 dark:text-text-dark-primary">
             Create Game Room
           </h1>
@@ -60,7 +76,13 @@ function CreateRoom() {
           />
           <button
             onClick={handleCreate}
-            className="w-full bg-gradient-to-br from-orange-400 to-purple-500 text-white py-2 rounded-lg"
+            disabled={!id}
+            title={!id ? 'Establishing server connection' : undefined}
+            className={`w-full py-2 rounded-lg ${
+              !id
+                ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                : 'bg-gradient-to-br from-orange-400 to-purple-500 text-white'
+            }`}
           >
             Create Room
           </button>
@@ -89,7 +111,13 @@ function CreateRoom() {
           />
           <button
             onClick={handleJoin}
-            className="w-full bg-gradient-to-br from-orange-400 to-purple-500 text-white py-2 rounded-lg"
+            disabled={!id}
+            title={!id ? 'Establishing server connection' : undefined}
+            className={`w-full py-2 rounded-lg ${
+              !id
+                ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                : 'bg-gradient-to-br from-orange-400 to-purple-500 text-white'
+            }`}
           >
             Join Room
           </button>

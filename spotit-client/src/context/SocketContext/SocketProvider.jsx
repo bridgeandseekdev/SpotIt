@@ -19,12 +19,34 @@ export const SocketProvider = ({ children }) => {
   } = useNewGameContext();
 
   useEffect(() => {
+    // Fire-and-forget health check call
+    fetch(
+      `${
+        import.meta.env.VITE_SOCKET_SERVER_URL || 'http://localhost:3000'
+      }/health`,
+    ).catch((error) => console.error('Health check failed:', error));
+
     const socket = io(
       import.meta.env.VITE_SOCKET_SERVER_URL || 'http://localhost:3000',
+      {
+        reconnection: true, // Enable built-in reconnection
+      },
     );
     socket.on('connect', () => {
       setSocket(socket);
       handleSocketConnectionAction(socket);
+    });
+
+    socket.on('connect_error', (err) => {
+      console.log('Connection error:', err.message, new Date());
+    });
+
+    socket.on('reconnect_attempt', (attempt) => {
+      console.log(`Reconnection attempt ${attempt} at`, new Date());
+    });
+
+    socket.on('reconnect_failed', () => {
+      console.log('Reconnection failed');
     });
 
     socket.on('room_created', handleRoomCreated);
@@ -51,6 +73,18 @@ export const SocketProvider = ({ children }) => {
 
     socket.on('game_over', (payload) => {
       handleOnlineGameOverAction(payload);
+    });
+
+    socket.on('connect_error', (err) => {
+      console.log('Connection error:', err.message, new Date());
+    });
+
+    socket.on('reconnect_attempt', (attempt) => {
+      console.log(`Reconnection attempt ${attempt} at`, new Date());
+    });
+
+    socket.on('reconnect_failed', () => {
+      console.log('Reconnection failed');
     });
 
     return () => {
