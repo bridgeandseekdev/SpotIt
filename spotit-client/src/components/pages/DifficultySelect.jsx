@@ -1,9 +1,11 @@
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { useNewGameContext } from '../../context';
 import { ArrowLeft } from 'lucide-react';
 
 function DifficultySelect() {
   const navigate = useNavigate();
+  const [isGameStarting, setIsGameStarting] = useState(false);
   const {
     setDifficultyAction,
     initializeGameAction,
@@ -15,7 +17,10 @@ function DifficultySelect() {
   };
 
   const handleStartGame = async () => {
+    setIsGameStarting(true);
     await initializeGameAction();
+
+    setIsGameStarting(false);
     navigate('/play');
   };
 
@@ -86,11 +91,15 @@ function DifficultySelect() {
         </div>
 
         <button
-          className="mt-12 px-12 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold hover:from-green-600 hover:to-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-green-500 disabled:hover:to-green-600 shadow-lg hover:shadow-xl disabled:shadow-none transform hover:-translate-y-0.5 active:translate-y-0 disabled:transform-none"
+          className={`mt-12 px-12 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg disabled:shadow-none transform hover:-translate-y-0.5 active:translate-y-0 disabled:transform-none ${
+            isGameStarting
+              ? 'relative overflow-hidden before:absolute before:inset-0 before:translate-x-[-100%] before:animate-[shimmer_1.5s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent'
+              : 'hover:from-green-600 hover:to-green-700'
+          }`}
           onClick={handleStartGame}
-          disabled={!difficulty}
+          disabled={!difficulty || isGameStarting}
         >
-          Start Game
+          {isGameStarting ? 'Starting...' : 'Start Game'}
         </button>
       </div>
     </div>

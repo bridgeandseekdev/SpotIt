@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useNewGameContext, useSocketContext } from '../../context';
 import OnlineDifficultySelect from './OnlineDifficultySelect';
 
 function RoomHome() {
   const navigate = useNavigate();
+  const [isGameStarting, setIsGameStarting] = useState(false);
 
   const { gameState } = useNewGameContext();
   const { startGame } = useSocketContext();
@@ -15,15 +16,17 @@ function RoomHome() {
 
   useEffect(() => {
     if (gameId) {
+      setIsGameStarting(false);
       navigate('/online/play');
     }
   }, [gameId, navigate]);
 
-  const handleStartGame = () => {
+  const handleStartGame = async () => {
     if (!difficulty) {
       alert('Please select difficulty first!');
       return;
     }
+    setIsGameStarting(true);
     startGame(difficulty, roomId);
   };
 
@@ -74,14 +77,19 @@ function RoomHome() {
             <div className="space-y-10">
               <OnlineDifficultySelect />
               <button
-                className={`w-full py-2 rounded-lg transition-colors ${
+                className={`w-full py-2 rounded-lg transition-all ${
                   difficulty
-                    ? 'bg-gradient-to-br from-orange-400 to-purple-500 text-white'
+                    ? `bg-gradient-to-br from-orange-400 to-purple-500 text-white ${
+                        isGameStarting
+                          ? 'opacity-75 relative overflow-hidden before:absolute before:inset-0 before:translate-x-[-100%] before:animate-[shimmer_1.5s_infinite] before:bg-gradient-to-r before:from-transparent before:via-white/10 before:to-transparent cursor-not-allowed shadow-inner'
+                          : 'hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0'
+                      }`
                     : 'bg-gray-200 cursor-not-allowed text-gray-500'
                 }`}
                 onClick={handleStartGame}
+                disabled={!difficulty || isGameStarting}
               >
-                Start Game
+                {isGameStarting ? 'Starting Game...' : 'Start Game'}
               </button>
             </div>
           ) : (
