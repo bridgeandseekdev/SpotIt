@@ -1,8 +1,9 @@
+import { GAME_MODES } from '../../constants/gameConstants';
 import PlayerInfo from './PlayerInfo';
 import TimerDisplay from './TimerDisplay';
 
-function PlayerSection({ player, timer, difficulty }) {
-  const showTimer = timer?.enabled;
+function PlayerSection({ player, timer, difficulty, gameMode }) {
+  const showTimer = timer?.enabled && gameMode !== GAME_MODES.BOT;
 
   return (
     <div

@@ -58,6 +58,7 @@ function GamePlay({ onlineCheckMatch }) {
               player={self}
               timer={currentMode.config.needsTimer ? timer : null}
               difficulty={difficulty}
+              gameMode={mode}
             />
             {mode !== 'online' && <QuitGameButton />}
           </div>
