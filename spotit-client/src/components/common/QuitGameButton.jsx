@@ -10,11 +10,11 @@ const QuitGameButton = () => {
   }
   return (
     <button
-      className="absolute top-8 left-6 flex gap-2 justify-center items-end"
+      className="absolute left-2 top-1.5 md:top-8 md:left-6 flex gap-2 justify-center items-center"
       onClick={handleQuitGame}
     >
-      <PowerOffIcon size={24} />
-      <span>Quit</span>
+      <PowerOffIcon className="w-4 h-4 md:w-8 md:h-8" />
+      <span className="text-sm md:text-base">Quit</span>
     </button>
   );
 };

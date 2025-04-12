@@ -65,8 +65,8 @@ function PlayArea({ handleCheckMatch: handleOnlineCheckMatch }) {
   };
 
   return (
-    <div className="h-full w-full flex flex-col justify-center p-4 mt-10 gap-4 relative">
-      <div className="h-[45%] w-full flex justify-center p-[2%] md:p-2">
+    <div className="h-full w-full flex flex-col justify-evenly py-1 md:p-4 mt-5 md:mt-10 gap-4 relative">
+      <div className="h-[40%] md:h-[45%] w-full flex justify-center md:p-2">
         <motion.div
           ref={pileCardRef}
           className="h-full max-w-full rounded-full aspect-square"
@@ -105,7 +105,7 @@ function PlayArea({ handleCheckMatch: handleOnlineCheckMatch }) {
           <Card card={animatingCard} type="player" onSymbolClick={() => {}} />
         </motion.div>
       )}
-      <div className="h-[55%] w-full flex justify-center p-[3%] md:p-2">
+      <div className="h-[50%] md:h-[55%] w-full flex justify-center p-[3%] md:p-2">
         <motion.div
           ref={currentCardRef}
           className="h-full max-w-full rounded-full aspect-square"
