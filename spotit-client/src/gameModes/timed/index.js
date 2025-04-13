@@ -1,6 +1,6 @@
 import { produce } from 'immer';
 import { findMatchingSymbol } from '../../utils/gameUtils';
-import { DIFFICULTY_CONFIGS } from '../../constants/gameConstants';
+import { DIFFICULTY_CONFIGS, GAME_STATUS } from '../../constants/gameConstants';
 
 const timedMode = {
   config: {
@@ -23,7 +23,7 @@ function stopTimer(draft) {
 function handleInitialization({ state, deck }) {
   return produce(state, (draft) => {
     draft.pileCard = deck.pop();
-    draft.gameStatus = 'playing';
+    draft.gameStatus = GAME_STATUS.PLAYING;
     draft.players.self.deck = deck;
     draft.players.self.currentCard = deck[0];
     draft.players.self.score = 0;
@@ -47,7 +47,7 @@ function handleMatch({ state, symbol }) {
         draft.players.self.deck.length > 0 ? draft.players.self.deck[0] : null;
       draft.timer.remaining = draft.timer.duration; // Reset timer
       if (draft.players.self.deck.length === 0) {
-        draft.gameStatus = 'game_over';
+        draft.gameStatus = GAME_STATUS.GAME_OVER;
         stopTimer(draft);
       }
     });
@@ -64,6 +64,7 @@ function handleTimerExpiry({ state }) {
       draft.players.self.deck.length > 0 ? draft.players.self.deck[0] : null;
     draft.timer.remaining = draft.timer.duration; // Reset timer
     if (draft.players.self.deck.length === 0) {
+      draft.gameStatus = GAME_STATUS.GAME_OVER;
       stopTimer(draft);
     }
   });
